@@ -1,7 +1,6 @@
 // To Compile use:
-// g++ -w  -I/usr/share/R/include -lRmath -lm -o gb *.cpp
-// g++ -w -I/home/cchivers/c++/library/ -I/usr/share/R/include -o gb *.cpp /home/cchivers/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
-// g++ -w -I/home/cchivers/SchoolBackUp/c++/library/ -I/usr/share/R/include -o gb *.cpp /home/cchivers/SchoolBackUp/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
+// g++ -w -I/home/cchivers/c++/library/ -I/usr/share/R/include -o ../gb *.cpp /home/cchivers/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
+// g++ -w -I/home/cchivers/SchoolBackUp/c++/library/ -I/usr/share/R/include -o ../gb *.cpp /home/cchivers/SchoolBackUp/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
 
 // Simulates and Tests a Bayesian implimentation of 
 // gravity mediated spread of invasive species
