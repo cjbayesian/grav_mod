@@ -644,20 +644,7 @@ float l_hood()
         }
     }
 
-cout << "\n\n\n\n"<< lh << "\n\n\n\n";
-    //prior on alphas (1/alpha)
-    //for(int i=1;i<=n_lakes;i++)
-    //    lh -= log(calc_alpha(i));
-    //prior on chem_pars N(0,10)
-    //for(int ch=2;ch<=n_chem_var;ch++) //ch<=n_chem_var
-    //{
-    //    lh += dnorm(chem_pars(ch),0,10,1);
-    //}
-
-    //prior on d and e (1/theta)
-    //lh -= log(d_par);
-    //lh -= log(e_par);
-
+    cout << "\n\n\n"<< lh << "\n\n\n";
     return lh;
 }
 float calc_alpha(int i)
@@ -718,10 +705,6 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
    cout << qll <<"\n";
 
    return(-qll);//-tve because simplex is a minimizer
-}
-float MLE_l_hood_MD(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
-{
-
 }
 
 
