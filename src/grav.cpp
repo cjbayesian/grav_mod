@@ -234,7 +234,7 @@ int main(int argc,char *argv[])
 
    //MCMC lib
 	string mcmc_file("output/lib.mcmc");
-   _vbc_vec<float> prop_width(1,4+n_chem_var);
+   _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
    prop_width(1)=0.001;
    prop_width(2)=0.05;
    prop_width(3)=0.1;
@@ -242,11 +242,47 @@ int main(int argc,char *argv[])
 
 
    for(int i=1;i<=n_chem_var+1;i++)
-      prop_width(i+3)=0.01;
+      prop_width(i+3)=0.000001;
 
    prop_width(4)=0.1;
-   
-   mcmc::run_mcmc(params, prop_width, &likelihood_wrapperMCMC,&prior, &restrict_MCMC, 5000, 1, 1, mcmc_file.c_str(),false,true);
 
+   _vbc_vec<float> prop_sigma;
+   prop_sigma = diag(prop_width);
+
+   // Print out prop_sigma
+   for(int i=1;i<=n_chem_var+4;i++)
+   {
+      for(int j=1;j<=n_chem_var+4;j++)   
+         cout << prop_sigma(i,j) << " | ";
+      cout << "\n";
+   }
+  
+   mcmcMD::run_mcmc(params, 
+      prop_sigma, 
+      &likelihood_wrapperMCMC_MD,
+      &prior_MD, 
+      &restrict_MCMC_MD, 
+      5000, 
+      10, 
+      1, 
+      mcmc_file.c_str(),
+      false,
+      true,
+      true,
+      100);
+
+/*	mcmcMD::run_mcmc(pms, 
+      props, 
+      &like, 
+      &prior, 
+      &restrictions, 
+      500000, 
+      1, 
+      100, 
+      file_name.c_str(),
+      TRUE,
+      TRUE,
+      1000);
+*/
    return 0;
 }

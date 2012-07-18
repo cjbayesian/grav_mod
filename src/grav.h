@@ -6,10 +6,9 @@
 #include<string>
 #include<sstream>
 #include<modRank.h>
-#include<vbc_genlib.h>
 #include<vbc_vector.h>
 #include<Simplex.h>
-#include<metro_hastings.h>
+#include<metro_hastingsMD.h>
 
 #define MATHLIB_STANDALONE 1
 #include <Rmath.h>
@@ -21,11 +20,11 @@ using namespace std;
 using namespace modRank;
 using namespace vbc_lib;
 using namespace simplex;
-using namespace mcmc;
+using namespace mcmcMD;
 
 // GLOBALS //
     bool no_env=FALSE; //set to true for reproducing Gertzen.
-    int n_sim_for_smooth=50; //number of sims for smoothing the likelihood surface
+    int n_sim_for_smooth=30; //number of sims for smoothing the likelihood surface
     bool ll=FALSE;
     int est_env=13;
     bool sim=FALSE;
@@ -115,8 +114,12 @@ float average(_vbc_vec<float> );
 float MLE_l_hood(_vbc_vec<float> *,_vbc_vec<float> *,int);
 
 void likelihood_wrapperMCMC(_vbc_vec<float> *, float *,int );
+void likelihood_wrapperMCMC_MD(_vbc_vec<float> *, float *,int );
 float prior(float,int);
 bool restrict_MCMC(float,int);
+
+float prior_MD(_vbc_vec<float>,int);
+bool restrict_MCMC_MD(_vbc_vec<float>);
 
 #endif;
 
@@ -346,13 +349,13 @@ void calc_traf_mat()
     #pragma omp parallel for
     for(int i=1;i<=n_lakes;i++)
     {
-        for(int j=1;j<=n_lakes;j++) //start at 0 since the diagonal of traf_mat is not needed. j<=i-1
+        for(int j=1;j<=i-1;j++) //start at 0 since the diagonal of traf_mat is not needed.
         {
             traf_mat(i,j)=0;
             for(int s=1;s<=n_sources;s++)
                 traf_mat(i,j)+=sources(s).Gij(i)*sources(s).Gij(j)*sources(s).Oi;
 
-            //traf_mat(j,i)=traf_mat(i,j);
+            traf_mat(j,i)=traf_mat(i,j);
         }
     }
 }
@@ -685,7 +688,7 @@ float l_hood()
         }
     }
 
-
+cout << "\n\n\n\n"<< lh << "\n\n\n\n";
     //prior on alphas (1/alpha)
     //for(int i=1;i<=n_lakes;i++)
     //    lh -= log(calc_alpha(i));
@@ -951,13 +954,44 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
 
    return(-qll);//-tve because simplex is a minimizer
 }
+float MLE_l_hood_MD(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
+{
 
+}
 
 
 /// MCMC LIB ////
 void likelihood_wrapperMCMC(_vbc_vec<float> * params, float * l,int dim)
 {
 	*l = - MLE_l_hood(params, params, dim);
+}
+void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
+{
+   _vbc_vec<float> params = *pars;
+   d_par=params(1);
+   e_par= params(2);
+   float llmd;
+   
+   c_par=params(3);
+   //glb_alpha=params(4);
+   
+   for(int i=1;i<=n_chem_var+1;i++)
+      chem_pars(i)=params(3+i);
+
+   if(dim==1)
+   {
+      calc_traf();
+      calc_traf_mat();
+   }
+   sim_spread();
+   sim_spread();
+   llmd=l_hood();
+
+   for(int i=1;i<=4+n_chem_var;i++)
+      cout<< params(i) <<"\t";
+   cout << llmd <<"\n";
+
+   *l = llmd;
 }
 bool restrict_MCMC(float param,int dim)
 {
@@ -986,11 +1020,29 @@ bool restrict_MCMC(float param,int dim)
 */
    return FALSE;
 }
+float prior_MD(_vbc_vec<float> x, int dim)
+{
+	return 0; //uninformative prior (log)
+}
+bool restrict_MCMC_MD(_vbc_vec<float> param)
+{
+   //par order: d, e, c, alpha
+   // or: d, e, c, B_0:B_13
+      if(param(1) <=0 || param(1) >= 4)
+         return TRUE;
+
+      if(param(2) <=0 || param(2) >= 2)
+         return TRUE;
+
+      if(param(3) <=0 )
+         return TRUE;
+
+   return FALSE;
+}
 float prior(float x, int dim)
 {
 	return 0; //uninformative prior (log)
 }
-
 
 
 
