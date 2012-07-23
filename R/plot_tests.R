@@ -75,18 +75,20 @@ geo_ani<-function(sim=FALSE)
     if(sim)
         {lakes<-as.matrix(read.csv('sims/simmed_lakes.csv',sep='\t',header=FALSE))}else{
     lakes<-as.matrix(read.csv('../2010_bytho_data/lakes_processed.csv',sep="\t",header=FALSE))}
-    tl<-as.matrix(read.table('t_mcmc.dat',header=F))
+    tl<-as.matrix(read.table('output/t_mcmc.dat',header=F))
+    tl<-tl[1:(nrow(tl)-1),]
     n_lakes<-length(tl[1,])
     for(t in 1989:2010)
     {
-        png(paste('images/posterior_',t,'.png',sep=''))
-        prop_inv<-sapply(1:n_lakes,function(x){sum(tl[500:700,x]<=t)})
-        prop_inv<-prop_inv/length(tl[500:700,1])
+        png(paste('plots/images/posterior_',t,'.png',sep=''))
+        prop_inv<-sapply(1:n_lakes,function(x){sum(tl[,x]<=t)})
+        prop_inv<-prop_inv/length(tl[,1])
         risk_order<-order(prop_inv)
-        plot(lakes[risk_order,2],lakes[risk_order,3],col=grey(1-prop_inv[risk_order]),pch=20,main=t,cex=1)
+        plot(lakes[risk_order,2],lakes[risk_order,3],pch=1,main=t,cex=1,xlab='UTM X',ylab='UTM Y')
+        points(lakes[risk_order,2],lakes[risk_order,3],col=grey(1-prop_inv[risk_order]),pch=20,main=t,cex=1)
         dev.off()
     }
-    system('convert -delay 100 images/posterior_* images/post.gif')
+    system('convert -delay 100 plots/images/posterior_* plots/images/post.gif')
 }
 
 ## Correlations ##

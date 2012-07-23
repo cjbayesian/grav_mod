@@ -24,14 +24,14 @@ int main(int argc,char *argv[])
 {
  	// decode arguments
 	args(argc,argv);
-
-    if(!ll)
-        cout<< "Reading Data\n";
+   inits();
+   
     // Read in Data //
+    cout<< "Reading Data\n";
     read_data();
-    if(!ll)
-        cout<< "Initiallizing...\n";
+
     // Set initial Params //
+    cout<< "Initiallizing...\n";
     init_state();
     init_t(); 
     calc_state();
@@ -174,66 +174,52 @@ int main(int argc,char *argv[])
        }
    }
 
-       ll_.close();
-       track_lake.close();    
+   ll_.close();
 
+cout << "# sampled\t" << n_sampled << "\n";
 
-   if(!ll)
-   {
-      // Run MCMC //
-       cout << "# sampled\t" << n_sampled << "\n";
-       cout << "Beginning MCMC\n";
-
-       //mcmc_mh(100000);
-       l_file.close();
-       t_file.close();
-       par_file.close();
-       alpha_mcmc_file.close();
-   }
-
-
+if(run_type==1)
+{
    // FIT ON TRAF_PARS & SPREAD PARS ONLY (NO ENV) //
    // need a likelihood function wrapper to call l_hood() multiple times and average the result
    // to smooth out stochastic surface.
-   no_env=FALSE;
-   _vbc_vec<float> params(1,4+n_chem_var);
-   params(1)= 0.05;//d
-   params(2)= 0.88;//e
-   params(3)= 1.46;//c
-   params(4)= 0.0000105;//alpha
-
-
-   for(int i=1;i<=n_chem_var+1;i++)
-      params(i+3)= chem_pars(i);
-      
-
+   no_env=TRUE;
+   _vbc_vec<float>params1(1,4);
+   params1(1)=1;
+   params1(2)=1;
+   params1(3)=1;
+   params1(4)=0.001;   
    float garbage=l_hood();
    /*
    for(int i=1;i<=20;i++)
    {
-      params(3)=params(3)+0.00001; 
-      cout<< params(3)<<"\t"<< MLE_l_hood(&params,&params) <<"\n";
+      params1(3)=params1(3)+0.00001; 
+      cout<< params1(3)<<"\t"<< MLE_l_hood(&params1,&params1) <<"\n";
    }
    */
-
-   /*
+   /*   
 	   _vbc_vec<float> dat1(1,4);
 	   _vbc_vec<float> MLE_params(1,4);
 	   simplex::clsSimplex<float> gertzen_rep;
 	   gertzen_rep.set_param_small(1e-100);
-	   gertzen_rep.start(&dat1,&params, &MLE_l_hood,4, 1e-10);
+	   gertzen_rep.start(&dat1,&params1, &MLE_l_hood,4, 1e-10);
 	   gertzen_rep.getParams(&MLE_params);
-
+   
    cout << "\nMLE\n";
    for(int i=1;i<=4;i++)
    {
       cout<< MLE_params(i) <<"\n";
    }
    */
+}
 
 
+
+if(run_type==2)
+{
    //MCMC lib
 	string mcmc_file("output/lib.mcmc");
+   _vbc_vec<float> params(1,4+n_chem_var);
    _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
    prop_width(1)=0.001;
    prop_width(2)=0.05;
@@ -241,9 +227,14 @@ int main(int argc,char *argv[])
    prop_width(4)=0.000001;
 
 
+   params(1)=1;
+   params(2)=1;
+   params(3)=1;   
    for(int i=1;i<=n_chem_var+1;i++)
+   {
       prop_width(i+3)=0.000001;
-
+      params(i)=chem_pars(i);
+   }
    prop_width(4)=0.1;
 
    _vbc_vec<float> prop_sigma;
@@ -284,5 +275,14 @@ int main(int argc,char *argv[])
       TRUE,
       1000);
 */
+}
+
+
+/// Sim from posterior ///
+if(run_type==3)
+   sim_spread_posterior();
+
+   
+
    return 0;
 }

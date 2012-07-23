@@ -23,6 +23,8 @@ using namespace simplex;
 using namespace mcmcMD;
 
 // GLOBALS //
+    int run_type=2; //1:MLE, 2:MCMC, 3:sim spread from posterior
+    int post_length=0;
     bool no_env=FALSE; //set to true for reproducing Gertzen.
     int n_sim_for_smooth=30; //number of sims for smoothing the likelihood surface
     bool ll=FALSE;
@@ -128,7 +130,7 @@ void args(int argc,char *argv[])
 	while ((optind < argc) && (argv[optind][0]=='-')) 
 	{
         string sw = argv[optind]; //-s flag for simulated data
-        if (sw=="-s") 
+      if (sw=="-s") 
 		{    
 			optind++;
 			sim = true;
@@ -138,12 +140,12 @@ void args(int argc,char *argv[])
 	
             cout << "Using sims\n";
 	    }
-	    else if (sw=="-d")  //-d flag for real data
+	   else if (sw=="-d")  //-d flag for real data
 		{
 			cout << "Using Data\n";
-        }
-        else if (sw=="-ll") //-ll flag to call l_hood() with given pars
-        {
+      }
+      else if (sw=="-ll") //-ll flag to call l_hood() with given pars
+      {
             ll=TRUE; 
             sim = true;  
             optind++;         
@@ -155,25 +157,46 @@ void args(int argc,char *argv[])
             optind++;
             e_par = atof(argv[optind]);
             get_gen_pars();
-        }
-        else if (sw=="-lld") //-ll flag to call l_hood() with given pars
-        {
+       }
+       else if (sw=="-lld") //-ll flag to call l_hood() with given pars
+       {
             ll=TRUE; 
             sim = false;  
             optind++;         
             d_par = atof(argv[optind]);
             optind++;
             e_par = atof(argv[optind]);
-        }
-        else
-		{
-            		cerr << "Unknown switch: " << argv[optind] << endl 
-			<< "Options:\n\t-s: Simulated Data \n\t-d: real data\n" 
+       }
+       else
+		 {
+         cerr << "Unknown switch: " << argv[optind] << endl 
+		   	<< "Options:\n\t-s: Simulated Data \n\t-d: real data\n" 
             << "Usage: ./gb -s <n_sources> <n_lakes>\n";
-		}
-        optind++;
+		 }
+       optind++;
 	} // end of arg-decoding
 }
+
+void inits()
+{
+   string tmp;
+   ifstream init_file("inits.ini");
+
+   init_file >> tmp;
+   init_file >> run_type;
+   init_file >> tmp;
+   init_file >> post_length;
+   
+  cout << run_type << "\t" << post_length << "\n";
+
+   init_file.close();
+}
+
+
+
+
+
+
 
 void get_gen_pars()
 {
@@ -791,6 +814,42 @@ float prior(float x, int dim)
 {
 	return 0; //uninformative prior (log)
 }
+
+
+
+///////////////// Posterior Spead Sim ///////////////
+void sim_spread_posterior()
+{
+   ifstream post_file("output/thinned.mcmc");
+   int index;
+   for(int i=1;i<=post_length;i++)
+   {
+      post_file >> index;
+      post_file >> d_par;
+      post_file >> e_par;      
+      post_file >> c_par;
+      for(int i=1;i<=n_chem_var+1;i++)
+         post_file >> chem_pars(i);
+
+      calc_traf();
+      calc_traf_mat();
+
+      sim_spread();
+      for(int i=1;i<=10;i++)
+      {
+         sim_spread();
+         write_t();
+      }
+      cout << i << " of "<< post_length<< "\n";
+   }
+
+   post_file.close();
+   t_file.close();
+}
+
+
+
+
 
 
 
