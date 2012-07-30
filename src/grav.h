@@ -194,10 +194,6 @@ void inits()
 
 
 
-
-
-
-
 void get_gen_pars()
 {
     ifstream par_file;

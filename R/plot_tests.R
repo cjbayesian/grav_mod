@@ -91,6 +91,36 @@ geo_ani<-function(sim=FALSE)
     system('convert -delay 100 plots/images/posterior_* plots/images/post.gif')
 }
 
+
+cummulative_total<-function()
+{
+   tl<-as.matrix(read.table('output/t_mcmc.dat',header=F))
+   tl<-tl[1:(nrow(tl)-1),]
+
+   #Discovery Rate
+   lakes<-as.matrix(read.csv('../2010_bytho_data/lakes_processed.csv',sep="\t",header=FALSE))
+   disc_year<-lakes[,5]
+
+   n_inv<-numeric(length(1989:2010))
+   n_disc<-numeric(length(1989:2010))
+   for(time in 1989:2010)
+   {
+      n_inv[time-1988]<-sum(tl<=time)/nrow(tl)
+      n_disc[time-1988]<-sum(disc_year<=time & disc_year != 0)
+   }
+   plot(1989:2010,n_inv,type='l',lty=2,ylim=c(0,100),xlab='Year',ylab='# invaded')    
+   lines(1989:2010,n_disc)
+
+   if(FALSE) ## Plot the trace expected time to invasion across all the sites.
+   {
+      x<-apply(tl,1,sum)
+      plot(x/ncol(tl))
+   }
+}
+
+
+
+
 ## Correlations ##
 if(F)
 {
