@@ -750,7 +750,7 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
       calc_traf();
       calc_traf_mat();
    }
-   sim_spread();
+
    sim_spread();
    llmd=l_hood();
 

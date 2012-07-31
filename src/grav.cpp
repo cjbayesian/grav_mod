@@ -233,7 +233,7 @@ if(run_type==2)
    for(int i=1;i<=n_chem_var+1;i++)
    {
       prop_width(i+3)=0.00001;
-      params(i)=chem_pars(i);
+      params(i+3)=chem_pars(i);
    }
    prop_width(4)=0.1;
 
