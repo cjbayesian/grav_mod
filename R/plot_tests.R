@@ -88,7 +88,7 @@ geo_ani<-function(sim=FALSE)
         points(lakes[risk_order,2],lakes[risk_order,3],col=grey(1-prop_inv[risk_order]),pch=20,main=t,cex=1)
         dev.off()
     }
-    system('convert -delay 100 plots/images/posterior_* plots/images/post.gif')
+    system('convert -delay 60 plots/images/posterior_* plots/images/post.gif')
 }
 
 
@@ -118,7 +118,40 @@ cummulative_total<-function()
    }
 }
 
+top_n_risk<-function(top_n=500)
+{
+   tl<-as.matrix(read.table('output/t_mcmc.dat',header=F))
+   tl<-tl[1:(nrow(tl)-1),]
 
+   #Discovery Rate
+   lakes<-as.matrix(read.csv('../2010_bytho_data/lakes_processed.csv',sep="\t",header=FALSE))
+   disc_year<-lakes[,5]
+   last_abs<-lakes[,6]
+   avg_inv_year<-apply(tl,2,mean)
+   lower_inv_year<-apply(tl,2,quantile, probs = 0.05)
+   upper_inv_year<-apply(tl,2,quantile, probs = 0.95)
+
+   risk_order<-order(avg_inv_year)
+
+   pdf('plots/top_n_risk.pdf',width=6,height=12)
+   
+   plot(avg_inv_year[risk_order[1:top_n]],1:top_n,
+      xlim=c(1988,2012),
+      xlab='Year',
+      ylab=paste('Top',top_n,'lakes at risk'))
+   for(i in 1:top_n)
+   {
+      arrows(avg_inv_year[risk_order[i]],i,lower_inv_year[risk_order[i]],angle=90,length=0.01,lty=2)
+      arrows(avg_inv_year[risk_order[i]],i,upper_inv_year[risk_order[i]],angle=90,length=0.01,lty=2)
+   }
+   points(disc_year[risk_order[1:top_n]],1:top_n,pch=4,col='red')
+   points(last_abs[risk_order[1:top_n]],1:top_n,pch=4,col='green')
+
+   ##
+   legend('topleft',legend=c('Predicted timing of esablisment','Discovered','Last observed absence'),
+      pch=c(1,4,4),col=c('black','red','green'))
+   dev.off()
+}
 
 
 ## Correlations ##

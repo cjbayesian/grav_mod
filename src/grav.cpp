@@ -232,7 +232,7 @@ if(run_type==2)
    params(3)=1;   
    for(int i=1;i<=n_chem_var+1;i++)
    {
-      prop_width(i+3)=0.000001;
+      prop_width(i+3)=0.00001;
       params(i)=chem_pars(i);
    }
    prop_width(4)=0.1;
@@ -253,7 +253,7 @@ if(run_type==2)
       &likelihood_wrapperMCMC_MD,
       &prior_MD, 
       &restrict_MCMC_MD, 
-      5000, 
+      50000, 
       10, 
       1, 
       mcmc_file.c_str(),
