@@ -130,6 +130,8 @@ top_n_risk<-function(top_n=500)
    avg_inv_year<-apply(tl,2,mean)
    lower_inv_year<-apply(tl,2,quantile, probs = 0.05)
    upper_inv_year<-apply(tl,2,quantile, probs = 0.95)
+   ever_sampled<- (last_abs == 0 & disc_year == 0)
+   ever_sampled<-ever_sampled+1
 
    risk_order<-order(avg_inv_year)
 
@@ -138,18 +140,21 @@ top_n_risk<-function(top_n=500)
    plot(avg_inv_year[risk_order[1:top_n]],1:top_n,
       xlim=c(1988,2012),
       xlab='Year',
+      pch=20,
+      col=ever_sampled[risk_order[1:top_n]],
       ylab=paste('Top',top_n,'lakes at risk'))
+   abline(v=1989:2011,lty=4,col='grey')
    for(i in 1:top_n)
    {
-      arrows(avg_inv_year[risk_order[i]],i,lower_inv_year[risk_order[i]],angle=90,length=0.01,lty=2)
-      arrows(avg_inv_year[risk_order[i]],i,upper_inv_year[risk_order[i]],angle=90,length=0.01,lty=2)
+      arrows(avg_inv_year[risk_order[i]],i,lower_inv_year[risk_order[i]],angle=90,length=0.01,lty=3,col=ever_sampled[risk_order[i]])
+      arrows(avg_inv_year[risk_order[i]],i,upper_inv_year[risk_order[i]],angle=90,length=0.01,lty=3,col=ever_sampled[risk_order[i]])
    }
-   points(disc_year[risk_order[1:top_n]],1:top_n,pch=4,col='red')
-   points(last_abs[risk_order[1:top_n]],1:top_n,pch=4,col='green')
+   points(disc_year[risk_order[1:top_n]],1:top_n,pch=4,col='black')
+   points(last_abs[risk_order[1:top_n]],1:top_n,pch=2,col='black')
 
    ##
-   legend('topleft',legend=c('Predicted timing of esablisment','Discovered','Last observed absence'),
-      pch=c(1,4,4),col=c('black','red','green'))
+   legend('topleft',bg='white',legend=c('Predicted timing of esablisment','Discovered','Last observed absence'),
+      pch=c(20,4,2),col=c('black','black','black'))
    dev.off()
 }
 

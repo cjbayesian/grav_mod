@@ -108,6 +108,8 @@ int which_max(int,int);
 void write_t();
 void write_par();
 void write_traf_mat();
+void write_inv_stat();
+void write_pp();
 
 float average(_vbc_vec<float> );
 float MLE_l_hood(_vbc_vec<float> *,_vbc_vec<float> *,int);
@@ -186,7 +188,9 @@ void inits()
    init_file >> run_type;
    init_file >> tmp;
    init_file >> post_length;
-   
+   init_file >> tmp;
+   init_file >> no_env;
+
   cout << run_type << "\t" << post_length << "\n";
 
    init_file.close();
@@ -663,7 +667,7 @@ float l_hood()
         }
     }
 
-    cout << "\n\n\n"<< lh << "\n\n\n";
+    cout << lh << "\n";
     return lh;
 }
 float calc_alpha(int i)
@@ -740,22 +744,27 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    float llmd;
    
    c_par=params(3);
-   //glb_alpha=params(4);
-   
-   for(int i=1;i<=n_chem_var+1;i++)
-      chem_pars(i)=params(3+i);
 
-   if(dim==1)
-   {
+   if(no_env)
+      glb_alpha=params(4);
+   else
+   { 
+      for(int i=1;i<=n_chem_var+1;i++)
+         chem_pars(i)=params(3+i);
+   }
+
       calc_traf();
       calc_traf_mat();
-   }
+      calc_pp();
 
    sim_spread();
    llmd=l_hood();
 
-   for(int i=1;i<=4+n_chem_var;i++)
+   int n_par=params.UBound();
+
+   for(int i=1;i<=n_par;i++)
       cout<< params(i) <<"\t";
+
    cout << llmd <<"\n";
 
    *l = llmd;
@@ -803,6 +812,12 @@ bool restrict_MCMC_MD(_vbc_vec<float> param)
 
       if(param(3) <=0 )
          return TRUE;
+
+      if(no_env)
+      {
+         if(param(4) <=0 )
+            return TRUE;
+      }
 
    return FALSE;
 }
@@ -908,4 +923,27 @@ void write_traf_mat()
     }
     traf.close();
 }
+void write_inv_stat()
+{
+   ofstream inv_stat("output/inv_stat.dat");
+   for(int i=1;i<=n_lakes;i++)
+   {
+      inv_stat << t_vec(i) << "\n";
+   }
 
+   inv_stat.close();
+}
+void write_pp()
+{
+    ofstream pp_file("output/pp.dat");
+    int lake_to_index;
+    for(int t=from_year+1;t<=to_year;t++)
+    {
+        for(int j=1;j<=state(t).n_calc_pp;j++) //n_calc_pp=the number of uninvaded+newly invaded sites
+        {
+            lake_to_index=state(t).calc_pp_index(j);
+            pp_file << t << "\t" << lake_to_index << "\t" << lakes(lake_to_index).pp(t)<<"\n";
+        }
+    }
+   pp_file.close();
+}

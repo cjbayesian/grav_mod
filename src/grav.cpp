@@ -219,48 +219,92 @@ if(run_type==2)
 {
    //MCMC lib
 	string mcmc_file("output/lib.mcmc");
-   _vbc_vec<float> params(1,4+n_chem_var);
-   _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
-   prop_width(1)=0.001;
-   prop_width(2)=0.05;
-   prop_width(3)=0.1;
-   prop_width(4)=0.000001;
-
-
-   params(1)=1;
-   params(2)=1;
-   params(3)=1;   
-   for(int i=1;i<=n_chem_var+1;i++)
+   if(!no_env)
    {
-      prop_width(i+3)=0.00001;
-      params(i+3)=chem_pars(i);
-   }
-   prop_width(4)=0.1;
+      _vbc_vec<float> params(1,4+n_chem_var);
+      _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
+      prop_width(1)=0.001;
+      prop_width(2)=0.05;
+      prop_width(3)=0.1;
+      prop_width(4)=0.000001;
 
-   _vbc_vec<float> prop_sigma;
-   prop_sigma = diag(prop_width);
 
-   // Print out prop_sigma
-   for(int i=1;i<=n_chem_var+4;i++)
+      params(1)=1;
+      params(2)=1;
+      params(3)=1;   
+      for(int i=1;i<=n_chem_var+1;i++)
+      {
+         prop_width(i+3)=0.000001;
+         params(i+3)=chem_pars(i);
+      }
+      prop_width(4)=0.1;
+
+      _vbc_vec<float> prop_sigma;
+      prop_sigma = diag(prop_width);
+
+      // Print out prop_sigma
+      for(int i=1;i<=n_chem_var+4;i++)
+      {
+         for(int j=1;j<=n_chem_var+4;j++)   
+            cout << prop_sigma(i,j) << " | ";
+         cout << "\n";
+      }
+     
+      mcmcMD::run_mcmc(params, 
+         prop_sigma, 
+         &likelihood_wrapperMCMC_MD,
+         &prior_MD, 
+         &restrict_MCMC_MD, 
+         50000, 
+         1, 
+         1, 
+         mcmc_file.c_str(),
+         false,
+         true,
+         true,
+         500);
+   }else
    {
-      for(int j=1;j<=n_chem_var+4;j++)   
-         cout << prop_sigma(i,j) << " | ";
-      cout << "\n";
+   /// No env.
+      _vbc_vec<float> params(1,4);
+      _vbc_vec<float> prop_width(1,4,1,4);
+      prop_width(1)=0.001;
+      prop_width(2)=0.05;
+      prop_width(3)=0.1;
+      prop_width(4)=0.000001;
+
+
+      params(1)=1;
+      params(2)=1;
+      params(3)=1;   
+      params(4)=0.00001;         
+
+      _vbc_vec<float> prop_sigma;
+      prop_sigma = diag(prop_width);
+
+      // Print out prop_sigma
+      for(int i=1;i<=4;i++)
+      {
+         for(int j=1;j<=4;j++)   
+            cout << prop_sigma(i,j) << " | ";
+         cout << "\n";
+      }
+     
+      mcmcMD::run_mcmc(params, 
+         prop_sigma, 
+         &likelihood_wrapperMCMC_MD,
+         &prior_MD, 
+         &restrict_MCMC_MD, 
+         50000, 
+         1, 
+         1, 
+         mcmc_file.c_str(),
+         false,
+         true,
+         true,
+         500);
    }
-  
-   mcmcMD::run_mcmc(params, 
-      prop_sigma, 
-      &likelihood_wrapperMCMC_MD,
-      &prior_MD, 
-      &restrict_MCMC_MD, 
-      50000, 
-      10, 
-      1, 
-      mcmc_file.c_str(),
-      false,
-      true,
-      true,
-      100);
+
 
 /*	mcmcMD::run_mcmc(pms, 
       props, 
@@ -282,6 +326,36 @@ if(run_type==2)
 if(run_type==3)
    sim_spread_posterior();
 
+/// Traf tests ////
+if(run_type==4)
+{
+   ofstream traf_ll_file("output/traf_ll.dat");
+   e_par=0;
+   d_par=0.5;
+   
+   for(int i=1;i<=10;i++)
+   {
+      e_par=0;
+      for(int j = 1;j<=10;j++)
+      {
+         calc_traf();
+         calc_traf_mat();
+         write_traf_mat();
+
+         calc_pp();
+
+         sim_spread();
+         cout << d_par << "\t" << e_par <<  "\n"; 
+         traf_ll_file << d_par << "\t" << e_par << "\t" << l_hood()  << "\n"; 
+         e_par=e_par+0.2;
+      }
+      d_par=d_par+0.2;
+   }
+   traf_ll_file.close();
+   calc_pp();
+   write_pp(); 
+   write_inv_stat();
+}
    
 
    return 0;

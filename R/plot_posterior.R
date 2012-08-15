@@ -1,6 +1,6 @@
 
 d<-read.table('output/lib.mcmc')
-
+burn_in<-4000
 n_iter<-nrow(d)-1
 
 vars<-c("i",
@@ -23,23 +23,24 @@ vars<-c("i",
     "SECCHI.DEPTH")
 
 ### Traces ###
-pdf('plots/traces.pdf')
+cur_time<-format(Sys.time(), "%m_%d_%H_%M_%S_%Y")
+pdf(paste('plots/traces',cur_time,'.pdf',sep=''))
 par(mfrow=c(2,1))
 for(i in 2:ncol(d))
 {
    plot(d[,i],type='l',main=vars[i])
-   hist(d[2000:n_iter,i],main='')
+   hist(d[burn_in:n_iter,i],main='')
 }
 dev.off()
 
-
+   
 
 
 
 
 ### Metaanalysis style (post mean and 95% BCI) ####
-e_x<-apply(d[2000:n_iter,],2,mean)
-q_x<-apply(d[2000:n_iter,],2,quantile,c(0.025,0.975))
+e_x<-apply(d[burn_in:n_iter,],2,mean)
+q_x<-apply(d[burn_in:n_iter,],2,quantile,c(0.025,0.975))
 
 par(mar=c(5, 7.7, 2, 2))
 plot(e_x[6:18],6:18,
