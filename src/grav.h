@@ -26,7 +26,7 @@ using namespace mcmcMD;
     int run_type=2; //1:MLE, 2:MCMC, 3:sim spread from posterior
     int post_length=0;
     bool no_env=FALSE; //set to true for reproducing Gertzen.
-    int n_sim_for_smooth=30; //number of sims for smoothing the likelihood surface
+    int n_sim_for_smooth=100; //number of sims for smoothing the likelihood surface
     bool ll=FALSE;
     int est_env=13;
     bool sim=FALSE;
@@ -112,7 +112,7 @@ void write_inv_stat();
 void write_pp();
 
 float average(_vbc_vec<float> );
-float MLE_l_hood(_vbc_vec<float> *,_vbc_vec<float> *,int);
+float MLE_l_hood(_vbc_vec<float> *,_vbc_vec<float> *);
 
 void likelihood_wrapperMCMC(_vbc_vec<float> *, float *,int );
 void likelihood_wrapperMCMC_MD(_vbc_vec<float> *, float *,int );
@@ -667,7 +667,7 @@ float l_hood()
         }
     }
 
-    cout << lh << "\n";
+    //cout << lh << "\n";
     return lh;
 }
 float calc_alpha(int i)
@@ -695,7 +695,7 @@ float calc_alpha(int i)
 /// Wrapper for l_hood that sims spread n_sim times
 /// and to smooth a quasi-likelihood function for fitting
 /// MLE estimates.
-float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
+float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
 {
    _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
    _vbc_vec<float> params = *pars;
@@ -703,16 +703,18 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
    e_par= params(2);
    
    c_par=params(3);
-   //glb_alpha=params(4);
    
-   for(int i=1;i<=n_chem_var+1;i++)
-      chem_pars(i)=params(3+i);
-
-   if(dim <= 2)
+   if(!no_env)
    {
-      calc_traf();
-      calc_traf_mat();
+      for(int i=1;i<=n_chem_var+1;i++)
+         chem_pars(i)=params(3+i);
    }
+   else
+      glb_alpha=params(4);
+
+   calc_traf();
+   calc_traf_mat();
+   calc_pp();
    sim_spread();
 
    for(int i=1;i<=n_sim_for_smooth;i++)
@@ -722,9 +724,10 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
    }
 
    float qll=average(tmplhood);
-
-   for(int i=1;i<=4+n_chem_var;i++)
+   
+   for(int i=1;i<=params.UBound();i++)
       cout<< params(i) <<"\t";
+
    cout << qll <<"\n";
 
    return(-qll);//-tve because simplex is a minimizer
@@ -734,7 +737,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat,int dim)
 /// MCMC LIB ////
 void likelihood_wrapperMCMC(_vbc_vec<float> * params, float * l,int dim)
 {
-	*l = - MLE_l_hood(params, params, dim);
+	*l = - MLE_l_hood(params, params);
 }
 void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
 {
