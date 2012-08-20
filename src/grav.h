@@ -700,8 +700,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
    _vbc_vec<float> params = *pars;
    d_par=params(1);
-   e_par= params(2);
-   
+   e_par= params(2);   
    c_par=params(3);
    
    if(!no_env)
@@ -719,8 +718,10 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
 
    for(int i=1;i<=n_sim_for_smooth;i++)
    {
+        calc_pp();
         sim_spread();
         tmplhood(i) = l_hood();
+        cout << i << "\t" << tmplhood(i) <<"\n";
    }
 
    float qll=average(tmplhood);
@@ -729,6 +730,8 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
       cout<< params(i) <<"\t";
 
    cout << qll <<"\n";
+   if(std::isnan(qll))
+      return(10000000);
 
    return(-qll);//-tve because simplex is a minimizer
 }
@@ -756,9 +759,9 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
          chem_pars(i)=params(3+i);
    }
 
-      calc_traf();
-      calc_traf_mat();
-      calc_pp();
+   calc_traf();
+   calc_traf_mat();
+   calc_pp();
 
    sim_spread();
    llmd=l_hood();
@@ -801,7 +804,10 @@ bool restrict_MCMC(float param,int dim)
 }
 float prior_MD(_vbc_vec<float> x, int dim)
 {
-	return 0; //uninformative prior (log)
+   if(no_env)
+      return -log(x(4)); //prior on alpha
+   else
+	   return 0; //uninformative prior (log)
 }
 bool restrict_MCMC_MD(_vbc_vec<float> param)
 {
@@ -842,9 +848,11 @@ void sim_spread_posterior()
       post_file >> d_par;
       post_file >> e_par;      
       post_file >> c_par;
-      for(int i=1;i<=n_chem_var+1;i++)
-         post_file >> chem_pars(i);
-
+      if(!no_env)
+      {
+         for(int i=1;i<=n_chem_var+1;i++)
+            post_file >> chem_pars(i);
+      }
       calc_traf();
       calc_traf_mat();
 
