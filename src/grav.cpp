@@ -261,10 +261,11 @@ if(run_type==2)
          1, 
          1, 
          mcmc_file.c_str(),
-         false,
          true,
          true,
-         500);
+         true,
+         500,
+         4);
    }else
    {
    /// No env.
@@ -301,10 +302,11 @@ if(run_type==2)
          1, 
          1, 
          mcmc_file.c_str(),
-         false,
          true,
          true,
-         500);
+         true,
+         500,
+         4);
    }
 
 
