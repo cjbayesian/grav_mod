@@ -66,16 +66,30 @@ ll<-read.table('output/traf_ll.dat')
 
  ll<-ll[ll[,3]>(-1000),]
 
-plot3d(x=ll[, 1], y=ll[, 2], z=ll[, 3],
-   col=heat.colors(1000)[ floor( (ll[,3]-min(ll[,3])) / ( max(ll[,3])-min(ll[,3]) ) * (500-1))+1],
+
+ht_col<-heat.colors(1000)[ floor( (ll[,4]-min(ll[,4])) / ( max(ll[,4])-min(ll[,4]) ) * (800-1))+1]
+
+plot3d(x=ll[, 1], y=ll[, 2], z=ll[, 4],
+   col=ht_col,
    xlab='e',
    ylab='c',
-   zlab='Log L')
+   zlab='Log L',
+   cex=2)
+ 
+writeWebGL(width=500,height=500)
 
-plot(x=ll[, 1], y=ll[, 2],
-   col=heat.colors(1000)[ floor( (ll[,3]-min(ll[,3])) / ( max(ll[,3])-min(ll[,3]) ) * (500-1))+1] )
-
-
+#### Experimental: x=e,y=c,time=alpha ####
+alphas<-unique(ll[,3])
+for(alpha in alphas)
+{
+   tmpll<-ll[ll[,3]==alpha]
+   plot(x=ll[, 1], y=ll[, 2],
+      col=ht_col,
+      xlab='e',
+      ylab='c',
+      pch=15,
+      main=paste('alpha = ',alpha))
+}
 
 
 

@@ -334,9 +334,12 @@ if(run_type==3)
 if(run_type==4)
 {
    ofstream traf_ll_file("output/traf_ll.dat");
-   e_par=0;
+
    d_par=1;
-   glb_alpha=0.0000002; //from MLE
+
+
+
+   e_par=0;
    for(int i=1;i<=40;i++)
    {
       c_par=0;
@@ -345,14 +348,19 @@ if(run_type==4)
          calc_pp();
       for(int j = 1;j<=40;j++)
       {
-         sim_spread();
-         cout << e_par << "\t" << c_par << "\t" << l_hood()  << "\n"; 
-         traf_ll_file << e_par << "\t" << c_par << "\t" << l_hood()  << "\n"; 
-
+         glb_alpha=0.000001; //from MLE
+         for(int k=1;k<=40;k++)
+         {
+            sim_spread();
+            cout << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
+            traf_ll_file << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
+            glb_alpha=glb_alpha+0.000001;
+         }
          c_par=c_par+0.1;
       }
       e_par=e_par+0.1;
-   }
+   } 
+
    traf_ll_file.close();
    calc_pp();
    write_pp(); 
