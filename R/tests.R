@@ -56,18 +56,24 @@ plot(max_pp,inv[,1]) ##after simulation
 
 
 ##############################################
+library(rgl)
 
 ll<-read.table('output/traf_ll.dat')
-
 
 # static plot
 #library(scatterplot3d)
 #scatterplot3d(ll[, 1], ll[, 2], ll[, 3])
 
-library(rgl)
-plot3d(ll[, 1], ll[, 2], (ll[, 3]))
+ ll<-ll[ll[,3]>(-1000),]
 
+plot3d(x=ll[, 1], y=ll[, 2], z=ll[, 3],
+   col=heat.colors(1000)[ floor( (ll[,3]-min(ll[,3])) / ( max(ll[,3])-min(ll[,3]) ) * (500-1))+1],
+   xlab='e',
+   ylab='c',
+   zlab='Log L')
 
+plot(x=ll[, 1], y=ll[, 2],
+   col=heat.colors(1000)[ floor( (ll[,3]-min(ll[,3])) / ( max(ll[,3])-min(ll[,3]) ) * (500-1))+1] )
 
 
 

@@ -334,24 +334,24 @@ if(run_type==3)
 if(run_type==4)
 {
    ofstream traf_ll_file("output/traf_ll.dat");
-   e_par=1;
+   e_par=0;
    d_par=1;
-   glb_alpha=0.2;
-   for(int i=1;i<=10;i++)
+   glb_alpha=0.0000002; //from MLE
+   for(int i=1;i<=40;i++)
    {
       c_par=0;
          calc_traf();
          calc_traf_mat();
-
-      for(int j = 1;j<=10;j++)
-      {
          calc_pp();
+      for(int j = 1;j<=40;j++)
+      {
          sim_spread();
          cout << e_par << "\t" << c_par << "\t" << l_hood()  << "\n"; 
          traf_ll_file << e_par << "\t" << c_par << "\t" << l_hood()  << "\n"; 
+
          c_par=c_par+0.1;
       }
-      e_par=e_par+0.2;
+      e_par=e_par+0.1;
    }
    traf_ll_file.close();
    calc_pp();
@@ -362,7 +362,7 @@ if(run_type==4)
 /// Just whatever tests ////
 if(run_type==5)
 {  
-   e_par=1;
+   e_par=5;
    d_par=1;
    c_par=1.2;
    glb_alpha=0.0001;
@@ -385,6 +385,7 @@ if(run_type==5)
       params1(3)=c_par;
       params1(4)=glb_alpha;   
    cout << MLE_l_hood(&params1,&params1) <<"\n";   
+
 }
 
 
