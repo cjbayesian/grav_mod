@@ -148,7 +148,7 @@ int main(int argc,char *argv[])
 
    int test_ch=14;
    d_par=0.175;
-   float bb = l_hood();
+   //float bb = l_hood();
 
    if(ll)
    {
@@ -352,13 +352,14 @@ if(run_type==4)
          calc_pp();
       for(int j = 1;j<=40;j++)
       {
-         glb_alpha=0.000000005; //from MLE
-         for(int k=1;k<=100;k++)
+         glb_alpha=0; //from MLE
+         for(int k=1;k<=500;k++)
          {
+            glb_alpha=glb_alpha+0.0000001;
             sim_spread();
             cout << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
             traf_ll_file << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
-            glb_alpha=glb_alpha+0.0000005;
+
          }
          c_par=c_par+0.1;
       }
@@ -374,11 +375,11 @@ if(run_type==4)
 /// Just whatever tests ////
 if(run_type==5)
 {  
-   e_par=5;
+   e_par=1;
    d_par=1;
-   c_par=1.2;
+   c_par=0.1;
    glb_alpha=0.0001;
-
+/*
    for(int j=1;j<=10;j++)
    {
       calc_traf();
@@ -397,7 +398,19 @@ if(run_type==5)
       params1(3)=c_par;
       params1(4)=glb_alpha;   
    cout << MLE_l_hood(&params1,&params1) <<"\n";   
+*/
 
+      calc_traf();
+      calc_traf_mat();
+      //write_traf_mat();
+
+
+      for(int i =1;i<=10;i++)
+      {
+         calc_pp();
+         sim_spread();
+      }
+      cout << l_hood() << "\n";
 }
 
 
