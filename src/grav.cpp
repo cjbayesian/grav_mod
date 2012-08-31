@@ -353,7 +353,7 @@ if(run_type==4)
       for(int j = 1;j<=40;j++)
       {
          glb_alpha=0; //from MLE
-         for(int k=1;k<=500;k++)
+         for(int k=1;k<=100;k++)
          {
             glb_alpha=glb_alpha+0.0000001;
             sim_spread();

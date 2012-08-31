@@ -641,7 +641,7 @@ float l_hood()
                     update_pp_l_hood(lake_index,t);
 
                 lh+= - pow(alpha*lakes(lake_index).pp(t),c_par); //Prob uninv to that year
-         cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
+//         cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
             }
             if(lakes(lake_index).discovered != 0) // discovered invaded
             {
@@ -654,7 +654,7 @@ float l_hood()
                     tmp_lh += - pow(alpha*lakes(lake_index).pp(t),c_par);
                 }
                 lh+= log(1-exp(tmp_lh));
-         cout << "B\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
+//         cout << "B\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
             }
         }else{
             tmp_lh=0;
@@ -666,7 +666,7 @@ float l_hood()
                 tmp_lh += - pow(alpha*lakes(lake_index).pp(t),c_par);
             }
             lh += log(1-exp(tmp_lh));
-         cout << "C\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
+//         cout << "C\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
         }
     }
 

@@ -64,7 +64,7 @@ ll<-read.table('output/traf_ll.dat')
 #library(scatterplot3d)
 #scatterplot3d(ll[, 1], ll[, 2], ll[, 3])
 
- ll<-ll[ll[,4]>(-1000),]
+ ll<-ll[ll[,4]>(-10000),]
 
 
 ht_col<-heat.colors(1000)[ floor( (ll[,4]-min(ll[,4])) / ( max(ll[,4])-min(ll[,4]) ) * (800-1))+1]
