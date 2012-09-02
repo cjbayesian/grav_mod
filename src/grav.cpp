@@ -189,7 +189,7 @@ if(run_type==1)
       params1(1)=1;
       params1(2)=1;
       params1(3)=1.5;
-      params1(4)=0.00001;   
+      params1(4)=0.0001;   
       float garbage=l_hood();
       /*
       for(int i=1;i<=20;i++)
@@ -344,26 +344,25 @@ if(run_type==4)
    sim_spread();
    cout<< l_hood() <<"\n";
 
-   for(int i=1;i<=40;i++)
+   for(int i=1;i<=10;i++)
    {
+      e_par=e_par+0.2;
       c_par=0;
          calc_traf();
          calc_traf_mat();
          calc_pp();
-      for(int j = 1;j<=40;j++)
+      for(int j = 1;j<=10;j++)
       {
+         c_par=c_par+0.2;
          glb_alpha=0; //from MLE
-         for(int k=1;k<=100;k++)
+         for(int k=1;k<=500;k++)
          {
-            glb_alpha=glb_alpha+0.0000001;
+            glb_alpha=glb_alpha+0.00001;
             sim_spread();
             cout << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
             traf_ll_file << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
-
          }
-         c_par=c_par+0.1;
       }
-      e_par=e_par+0.1;
    } 
 
    traf_ll_file.close();
@@ -375,30 +374,36 @@ if(run_type==4)
 /// Just whatever tests ////
 if(run_type==5)
 {  
+
+   ofstream ll_file("output/ll.dat");
    e_par=1;
    d_par=1;
-   c_par=0.1;
-   glb_alpha=0.0001;
-/*
-   for(int j=1;j<=10;j++)
-   {
-      calc_traf();
-      calc_traf_mat();
-      write_traf_mat();
-      e_par+=0.5;   
+   c_par=1.5;
 
-      calc_pp();
+   calc_traf();
+   calc_traf_mat();
+//   write_traf_mat();
+   calc_pp();
+
+   glb_alpha=0;
+   for(int j=1;j<=500;j++)
+   {
+      glb_alpha=glb_alpha+0.00001;
       sim_spread();
-      cout << l_hood() << "\n";
+      ll_file<< glb_alpha<< "\t" << l_hood() << "\n";
+      cout << glb_alpha<< "\t"<< l_hood() << "\n";
    }
 
+   ll_file.close();
+
+    // MLE at d=e=1,c=1.5 : glb_alpha=0.00081
+/*
    _vbc_vec<float>params1(1,4);
       params1(1)=d_par;
       params1(2)=e_par;
       params1(3)=c_par;
       params1(4)=glb_alpha;   
    cout << MLE_l_hood(&params1,&params1) <<"\n";   
-*/
 
       calc_traf();
       calc_traf_mat();
@@ -411,6 +416,8 @@ if(run_type==5)
          sim_spread();
       }
       cout << l_hood() << "\n";
+
+*/
 }
 
 

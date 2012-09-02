@@ -64,8 +64,8 @@ ll<-read.table('output/traf_ll.dat')
 #library(scatterplot3d)
 #scatterplot3d(ll[, 1], ll[, 2], ll[, 3])
 
- ll<-ll[ll[,4]>(-10000),]
-
+ ll<-ll[ll[,4]>(-1000),]
+ ll<-ll[ll[,2]>0,]
 
 ht_col<-heat.colors(1000)[ floor( (ll[,4]-min(ll[,4])) / ( max(ll[,4])-min(ll[,4]) ) * (800-1))+1]
 
@@ -81,6 +81,8 @@ writeWebGL(width=500,height=500)
 #### Experimental: x=e,y=c,time=alpha ####
 alphas<-unique(ll[,3])
 mll_alpha<-numeric(length(alphas))
+mle_e<-numeric(length(alphas))
+mle_c<-numeric(length(alphas))
 i<-1
 for(alpha in alphas)
 {
@@ -94,22 +96,26 @@ for(alpha in alphas)
       xlab='e',
       ylab='c',
       pch=15,
+      cex=3,
       main=paste('alpha = ',alpha,'\nMax LL = ',max(tmpll[,4])))
 
    max_e<-tmpll[which.max(tmpll[,4]),1]
-   max_d<-tmpll[which.max(tmpll[,4]),2]
+   max_c<-tmpll[which.max(tmpll[,4]),2]
    points(max_e,max_d)
    abline(v=max_e,lty=2)
-   abline(h=max_d,lty=2)
+   abline(h=max_c,lty=2)
    dev.off()
-   
+   mle_e[i]<-max_e
+   mle_c[i]<-max_c
    mll_alpha[i]<-max(tmpll[,4])
    i<-i+1
 }
 
 ## Is there a ridge? (expect flat if there is.)
+par(mfrow=c(3,1))
 plot(alphas,mll_alpha)
-
+plot(alphas,mle_e,type='b')
+plot(alphas,mle_c,type='b')
 
 
 
