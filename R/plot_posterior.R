@@ -33,9 +33,9 @@ for(i in 2:ncol(d))
 }
 dev.off()
 
-   
-
-
+  
+acceptance_rate<-length(unique(d[,2]))/length(d[,2] )
+acceptance_rate
 
 
 ### Metaanalysis style (post mean and 95% BCI) ####
