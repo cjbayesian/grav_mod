@@ -23,7 +23,7 @@ vars<-c("i",
     "SECCHI.DEPTH")
 
 ### Traces ###
-cur_time<-format(Sys.time(), "%m_%d_%H_%M_%S_%Y")
+cur_time<-format(Sys.time(), "%Y_%m_%d_%H_%M_%S")
 pdf(paste('plots/traces',cur_time,'.pdf',sep=''))
 par(mfrow=c(2,1))
 for(i in 2:ncol(d))
