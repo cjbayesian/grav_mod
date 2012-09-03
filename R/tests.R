@@ -88,7 +88,7 @@ for(alpha in alphas)
 {
    tmpll<-ll[ll[,3]==alpha,]
 
-   ht_col<-heat.colors(1000)[ floor( (tmpll[,4]-min(ll[,4])) / ( max(ll[,4])-min(ll[,4]) ) * (800-1))+1]
+   ht_col<-heat.colors(1000)[ floor( (tmpll[,4]-min(tmpll[,4])) / ( max(tmpll[,4])-min(tmpll[,4]) ) * (800-1))+1]
 
    png(paste('plots/',1+alpha,'.png',sep=''))
    plot(x=tmpll[, 1], y=tmpll[, 2],
@@ -101,10 +101,20 @@ for(alpha in alphas)
 
    max_e<-tmpll[which.max(tmpll[,4]),1]
    max_c<-tmpll[which.max(tmpll[,4]),2]
-   points(max_e,max_d)
+   points(max_e,max_c)
    abline(v=max_e,lty=2)
    abline(h=max_c,lty=2)
    dev.off()
+
+   plot(x=tmpll[, 1], y=tmpll[, 2],
+      col=ht_col,
+      xlab='e',
+      ylab='c',
+      pch=15,
+      cex=3,
+      main=paste('alpha = ',alpha,'\nMax LL = ',max(tmpll[,4])))
+
+   
    mle_e[i]<-max_e
    mle_c[i]<-max_c
    mll_alpha[i]<-max(tmpll[,4])
@@ -128,9 +138,55 @@ plot(alphas,mle_c,type='b')
 
 ## Rows are across a dimension of parameter space.
 n_inv<-as.matrix(read.table('output/n_inv_file.dat'))
+ll<-as.matrix(read.table("output/ll.dat"))
+  
+  colors<-c('blue','lightblue','yellow','red')
+  cus_col<-colorRampPalette(colors=colors, bias = 1, space = c("rgb", "Lab"),interpolate = c("linear", "spline"))
+
+
+ht_col<-cus_col(1000)[ floor( (ll[,2]-min(ll[,2])) / ( max(ll[,2])-min(ll[,2]) ) * (1000-1))+1]
 
 for(i in 1:ncol(n_inv))
-   plot(n_inv[,i],ylim=c(0,max(n_inv)),main=i+1989)
+{
+   plot(ll[,1],n_inv[,i],
+      col=ht_col,
+      ylim=c(0,max(n_inv)),
+      xlab='e_par',
+      ylab='# of sites invaded',
+      main=i+1989)
+   colorlegend(posx=c(0.8,0.84),
+      posy=c(0.5,0.9),
+      col=cus_col(1000),
+      zlim=c(min(ll[,2]),max(ll[,2])),
+      digit=2,
+      zval=seq(floor(min(ll[,2])),floor(max(ll[,2])),length.out=5),
+      main='Log L')
+}
+
+for(i in 1:ncol(n_inv))
+{
+   plot(n_inv[,i],ll[,2],main=i+1989)
+
+}
+
+
+e_levels<-unique(ll[,1])
+for(j in 1:length(e_levels))
+{
+   plot(n_inv[es ,],ylim=c(0,max(n_inv)))
+   for(es in which(ll[,1]==e_levels[j]))
+      lines(n_inv[es ,],col=j)
+}
+
+
+for(i in 1:ncol(n_inv))
+   plot(ll[,1],,main=i+1989)
+
+
+
+plot(ll[,1],ll[,2],
+   xlab='e',
+   ylab='Log L')
 
 
 
