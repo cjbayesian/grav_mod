@@ -190,8 +190,8 @@ void inits()
    init_file >> post_length;
    init_file >> tmp;
    init_file >> no_env;
-
-  cout << run_type << "\t" << post_length << "\n";
+   init_file >> tmp;
+   init_file >> n_sim_for_smooth;
 
    init_file.close();
 }
@@ -575,7 +575,7 @@ void sim_spread()
         {
             lake_index=state(t-1).u_inv(i);
 
-               alpha=calc_alpha(lake_index);
+             alpha=calc_alpha(lake_index);
 
             if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t), c_par ) )  >= runif(0,1) || lakes(lake_index).discovered==t ) 
                     && lakes(lake_index).last_abs < t ) // invade stochastically and restrict to observed pattern
@@ -717,11 +717,13 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    calc_traf();
    calc_traf_mat();
    calc_pp();
+
+   sim_spread();
+   sim_spread();
    sim_spread();
 
    for(int i=1;i<=n_sim_for_smooth;i++)
    {
-        calc_pp();
         sim_spread();
         tmplhood(i) = l_hood();
         cout << i << "\t" << tmplhood(i) <<"\n";
@@ -748,10 +750,9 @@ void likelihood_wrapperMCMC(_vbc_vec<float> * params, float * l,int dim)
 void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
 {
    _vbc_vec<float> params = *pars;
+   float llmd;
    d_par=params(1);
    e_par= params(2);
-   float llmd;
-   
    c_par=params(3);
 
    if(no_env)
@@ -766,7 +767,9 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    calc_traf_mat();
    calc_pp();
 
-   sim_spread();
+   for(int i =1;i<=3;i++)
+      sim_spread();
+
    llmd=l_hood();
 
    int n_par=params.UBound();
@@ -825,11 +828,8 @@ bool restrict_MCMC_MD(_vbc_vec<float> param)
       if(param(3) <=0 )
          return TRUE;
 
-      if(no_env)
-      {
-         if(param(4) <=0 )
-            return TRUE;
-      }
+      if(no_env && param(4) <= 0)
+         return TRUE;
 
    return FALSE;
 }

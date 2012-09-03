@@ -188,7 +188,7 @@ if(run_type==1)
       _vbc_vec<float>params1(1,4);
       params1(1)=1;
       params1(2)=1;
-      params1(3)=1.5;
+      params1(3)=2;
       params1(4)=0.0001;   
       float garbage=l_hood();
       /*
@@ -271,16 +271,16 @@ if(run_type==2)
    /// No env.
       _vbc_vec<float> params(1,4);
       _vbc_vec<float> prop_width(1,4,1,4);
-      prop_width(1)=0.001;
+      prop_width(1)=0.05;
       prop_width(2)=0.05;
-      prop_width(3)=0.01;
+      prop_width(3)=0.05;
       prop_width(4)=0.000001;
 
 
       params(1)=1;
       params(2)=1;
-      params(3)=1;   
-      params(4)=0.00001;         
+      params(3)=2;   
+      params(4)=0.0001;         
 
       _vbc_vec<float> prop_sigma;
       prop_sigma = diag(prop_width);
@@ -359,6 +359,8 @@ if(run_type==4)
          {
             glb_alpha=glb_alpha+0.00001;
             sim_spread();
+            sim_spread();
+            sim_spread();
             cout << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
             traf_ll_file << e_par << "\t" << c_par << "\t" << glb_alpha << "\t" << l_hood()  << "\n"; 
          }
@@ -376,24 +378,42 @@ if(run_type==5)
 {  
 
    ofstream ll_file("output/ll.dat");
-   e_par=1;
+   ofstream n_inv_file("output/n_inv_file.dat");
+   e_par=0;
    d_par=1;
-   c_par=1.5;
+   c_par=1;
+   glb_alpha=0.005;
 
    calc_traf();
    calc_traf_mat();
 //   write_traf_mat();
    calc_pp();
 
-   glb_alpha=0;
-   for(int j=1;j<=500;j++)
+
+   for(int j=1;j<=40;j++)
    {
-      glb_alpha=glb_alpha+0.00001;
-      sim_spread();
-      ll_file<< glb_alpha<< "\t" << l_hood() << "\n";
-      cout << glb_alpha<< "\t"<< l_hood() << "\n";
+      e_par=e_par+0.05;
+
+   calc_traf();
+   calc_traf_mat();
+// write_traf_mat();
+   calc_pp();
+
+      for(int i=1;i<=30;i++)
+      {
+         sim_spread();
+
+         //Write cummulative_total invaded for that sim.
+         for(int t=from_year+1;t<=to_year;t++)
+            n_inv_file << state(t).n_inv << "\t";
+         n_inv_file << "\n";
+
+         ll_file<< e_par << "\t" << l_hood() << "\n";
+         cout << e_par << "\t"<< l_hood() << "\n";
+      }
    }
 
+   n_inv_file.close();
    ll_file.close();
 
     // MLE at d=e=1,c=1.5 : glb_alpha=0.00081
