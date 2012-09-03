@@ -187,7 +187,7 @@ if(run_type==1)
    {
       _vbc_vec<float>params1(1,4);
       params1(1)=1;
-      params1(2)=1;
+      params1(2)=0.25;
       params1(3)=2;
       params1(4)=0.0001;   
       float garbage=l_hood();
@@ -381,7 +381,7 @@ if(run_type==5)
    ofstream n_inv_file("output/n_inv_file.dat");
    e_par=0;
    d_par=1;
-   c_par=1;
+   c_par=1.5;
    glb_alpha=0.005;
 
    calc_traf();
@@ -390,7 +390,7 @@ if(run_type==5)
    calc_pp();
 
 
-   for(int j=1;j<=40;j++)
+   for(int j=1;j<=80;j++)
    {
       e_par=e_par+0.05;
 
