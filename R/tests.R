@@ -122,3 +122,15 @@ plot(alphas,mle_c,type='b')
 
 
 
+
+
+########################### Examine the stochastic spread component #########################
+
+## Rows are across a dimension of parameter space.
+n_inv<-as.matrix(read.table('output/n_inv_file.dat'))
+
+for(i in 1:ncol(n_inv))
+   plot(n_inv[,i],ylim=c(0,max(n_inv)),main=i+1989)
+
+
+
