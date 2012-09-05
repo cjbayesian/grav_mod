@@ -38,7 +38,7 @@ using namespace mcmcMD;
     int n_sources=213;      //4496; with non grided Oi
     int n_chem_var=13;
     int from_year=1989;
-    int to_year=2010;
+    int to_year=2050;
     int n_sampled=0;
     _vbc_vec<float> d_matrix(1,n_sources,1,n_lakes);
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit

@@ -142,9 +142,7 @@ ll<-as.matrix(read.table("output/ll.dat"))
   
   colors<-c('blue','lightblue','yellow','red')
   cus_col<-colorRampPalette(colors=colors, bias = 1, space = c("rgb", "Lab"),interpolate = c("linear", "spline"))
-
-
-ht_col<-cus_col(1000)[ floor( (ll[,2]-min(ll[,2])) / ( max(ll[,2])-min(ll[,2]) ) * (1000-1))+1]
+  ht_col<-cus_col(1000)[ floor( (ll[,2]-min(ll[,2])) / ( max(ll[,2])-min(ll[,2]) ) * (1000-1))+1]
 
 for(i in 1:ncol(n_inv))
 {
@@ -188,5 +186,36 @@ plot(ll[,1],ll[,2],
    xlab='e',
    ylab='Log L')
 
+
+
+########################################################################################
+################### Colorfull spread vis ###############################################
+
+d<-as.matrix(read.table('output/t_mcmc.dat'))
+lakes<-as.matrix(read.csv('../2010_bytho_data/lakes_processed.csv',sep="\t",header=FALSE))
+
+invaded_mat<-array(0,dim=c(ncol(d),max(d)-min(d)+1)) ##n_lakes x years
+
+
+mm<-mclapply(1:ncol(d),function(i){
+   tmp_vec<-NULL
+   for(year in min(d):max(d))
+      tmp_vec[(year-min(d))+1]<-sum(d[i,]==year)
+   print(i)
+   return(tmp_vec)
+})
+
+
+
+
+  colors<-c('blue','lightblue','yellow','red')
+  cus_col<-colorRampPalette(colors=colors, bias = 1, space = c("rgb", "Lab"),interpolate = c("linear", "spline"))
+  ht_col<-cus_col(1000)[ floor( (mm[,i])) / ( max(mm[,i]) ) * (1000-1))+1]
+
+plot(log(lakes[,1]),tti,col='white')
+for(i in 1:ncol(d))
+{
+   points(rep(log(lakes[i,1]),max(d)-min(d)+1),min(d):max(d),col=ht_col)
+}
 
 

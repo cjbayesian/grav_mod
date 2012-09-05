@@ -377,6 +377,7 @@ if(run_type==4)
 if(run_type==5)
 {  
 
+   /*
    ofstream ll_file("output/ll.dat");
    ofstream n_inv_file("output/n_inv_file.dat");
    e_par=0;
@@ -386,7 +387,6 @@ if(run_type==5)
 
    calc_traf();
    calc_traf_mat();
-//   write_traf_mat();
    calc_pp();
 
 
@@ -396,7 +396,6 @@ if(run_type==5)
 
    calc_traf();
    calc_traf_mat();
-// write_traf_mat();
    calc_pp();
 
       for(int i=1;i<=30;i++)
@@ -417,27 +416,27 @@ if(run_type==5)
    ll_file.close();
 
     // MLE at d=e=1,c=1.5 : glb_alpha=0.00081
-/*
-   _vbc_vec<float>params1(1,4);
-      params1(1)=d_par;
-      params1(2)=e_par;
-      params1(3)=c_par;
-      params1(4)=glb_alpha;   
-   cout << MLE_l_hood(&params1,&params1) <<"\n";   
+   */
+   e_par=0.25;
+   d_par=1;
+   c_par=1.5;
+   glb_alpha=0.005;
+   calc_traf();
+   calc_traf_mat();
+   calc_pp();
+      sim_spread();
+      sim_spread();
+      sim_spread();
+   cout << "Simming...\n";
+   for(int i=1;i<=10000;i++)
+   {
+      sim_spread();
+      write_t();
+   }
+     
+   t_file.close();
 
-      calc_traf();
-      calc_traf_mat();
-      //write_traf_mat();
 
-
-      for(int i =1;i<=10;i++)
-      {
-         calc_pp();
-         sim_spread();
-      }
-      cout << l_hood() << "\n";
-
-*/
 }
 
 
