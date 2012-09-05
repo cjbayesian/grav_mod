@@ -200,22 +200,29 @@ invaded_mat<-array(0,dim=c(ncol(d),max(d)-min(d)+1)) ##n_lakes x years
 mm<-mclapply(1:ncol(d),function(i){
    tmp_vec<-NULL
    for(year in min(d):max(d))
-      tmp_vec[(year-min(d))+1]<-sum(d[i,]==year)
+      tmp_vec[(year-min(d))+1]<-sum(d[,i]==year)
    print(i)
    return(tmp_vec)
 })
 
+mm<-do.call(cbind, mm)
 
 
 
-  colors<-c('blue','lightblue','yellow','red')
+  colors<-c('white','blue','lightblue','yellow','red')
   cus_col<-colorRampPalette(colors=colors, bias = 1, space = c("rgb", "Lab"),interpolate = c("linear", "spline"))
-  ht_col<-cus_col(1000)[ floor( (mm[,i])) / ( max(mm[,i]) ) * (1000-1))+1]
+  
 
-plot(log(lakes[,1]),tti,col='white')
+plot(rank(log(lakes[,1])),tti,col='white')
 for(i in 1:ncol(d))
 {
-   points(rep(log(lakes[i,1]),max(d)-min(d)+1),min(d):max(d),col=ht_col)
+   ht_col<-cus_col(1000)[ floor( (mm[1:(nrow(mm)-1),i]) / ( max(mm[1:(nrow(mm)-1),i]) ) * (1000-1) + 1 ) ]
+   points(rep(rank( log(lakes[,1]) )[i] ,max(d)-min(d)) ,min(d):(max(d)-1),col=ht_col,pch=15,cex=0.2)
 }
+
+
+plot(mm[1:(nrow(mm)-1),i],type='l',ylim=c(0,1000))
+for(i in 1:ncol(mm))
+lines(mm[1:(nrow(mm)-1),i],col=i)
 
 
