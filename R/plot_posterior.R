@@ -37,6 +37,8 @@ dev.off()
 acceptance_rate<-length(unique(d[,2]))/length(d[,2] )
 acceptance_rate
 
+plot(d[seq(burn_in,nrow(d),100),]) ## Thinned correlogram
+
 
 ### Metaanalysis style (post mean and 95% BCI) ####
 e_x<-apply(d[burn_in:n_iter,],2,mean)
