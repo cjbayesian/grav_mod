@@ -78,7 +78,7 @@ geo_ani<-function(sim=FALSE)
     tl<-as.matrix(read.table('output/t_mcmc.dat',header=F))
     tl<-tl[1:(nrow(tl)-1),]
     n_lakes<-length(tl[1,])
-    for(t in 1989:2010)
+    for(t in min(tl):(max(tl)-1))
     {
         png(paste('plots/images/posterior_',t,'.png',sep=''))
         prop_inv<-sapply(1:n_lakes,function(x){sum(tl[,x]<=t)})
