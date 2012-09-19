@@ -38,7 +38,7 @@ using namespace mcmcMD;
     int n_sources=213;      //4496; with non grided Oi
     int n_chem_var=13;
     int from_year=1989;
-    int to_year=2000;
+    int to_year=2009;
     int n_sampled=0;
     _vbc_vec<float> d_matrix(1,n_sources,1,n_lakes);
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit
@@ -285,6 +285,17 @@ void read_data()
         l_file >> lakes(i).last_abs;
 
         // Catch for to_year < 2010.
+        // modify lakes(i) to reflect missing information.
+        if(to_year < 2010)
+        {
+            if(lakes(i).discovered > to_year)
+            {
+               lakes(i).invaded = 0;
+               lakes(i).discovered=0;
+            }
+            if(lakes(i).last_abs > to_year)
+               lakes(i).last_abs = 0;
+        } 
 
 
         if( (lakes(i).invaded == 1 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s))
