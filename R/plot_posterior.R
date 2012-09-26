@@ -1,6 +1,6 @@
 
 d<-read.table('output/lib.mcmc')
-burn_in<-4000
+burn_in<-10000
 n_iter<-nrow(d)-1
 
 vars<-c("i",
