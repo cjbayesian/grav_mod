@@ -2,7 +2,7 @@
 
 ## Usage:
 #    test_sims.sh <options> <n trials>
-
+##testing new git install
 ## Test forward sim model.
 if [ "$1" == "-new" ]
 then
