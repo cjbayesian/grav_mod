@@ -447,28 +447,38 @@ if(run_type==5)
 if(run_type==6)
 {  
    int n_pars = 5;
-   int m_pars = 1; //m reps of the bootstrap/posterior
-   _vbc_vec<float>params1(1,n_pars);
+   int m_pars = 2; //m reps of the bootstrap/posterior
+   _vbc_vec<float>params1(1,m_pars,1,n_pars);
 
    // Read parameters values from file //
-   ifstream mle_pars;
-   mle_pars.open("output/mle_pars.tab");
-   for(int i=1;i<=n_pars;i++)
+   ifstream pred_pars;
+   pred_pars.open("output/pred_pars.tab");
+   for(int i=1;i<=m_pars;i++)
    {
-      mle_pars >> params1(i);
+      for(int j=1;j<=n_pars;j++)
+      {
+         pred_pars >> params1(i,j);
+      }
    }
-   mle_pars.close();
+   pred_pars.close();
    // -- //
 
 
    _vbc_vec<float> preds;
-   preds = predict_p(params1,val_lakes_index); //pars,indicies of validation set
+   preds = predict_p(params1,val_lakes_index,m_pars); //pars,indicies of validation set
 
 
-   // std.out //
+   // Write to file //
+   ofstream pred_p_file;
+   pred_p_file.open("output/pred_p.tab");
    for(int i=1;i<=n_val_lakes;i++)
+      pred_p_file << val_lakes_index(i) << "\t";
+   pred_p_file << "\n";
+   for(int m=1;m<=m_pars;m++)
    {
-      cout << val_lakes_index(i) << "\t" << preds(i) << "\n";
+      for(int i=1;i<=n_val_lakes;i++)
+         pred_p_file << preds(m,i) << "\t";
+      pred_p_file << "\n";
    }
    // -- //
 }

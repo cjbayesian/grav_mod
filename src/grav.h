@@ -124,7 +124,7 @@ bool restrict_MCMC(float,int);
 
 float prior_MD(_vbc_vec<float>,int);
 bool restrict_MCMC_MD(_vbc_vec<float>);
-_vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>); //pars,indicies
+_vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>,int); //pars,indicies
 
 #endif;
 
@@ -900,24 +900,28 @@ void sim_spread_posterior()
 
 /////////////// Prediction probability vectors //////////////
 
-_vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies) //pars,indicies
+_vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pars) //pars,indicies
 {
-   d_par=params(1);
-   e_par= params(2);   
-   c_par=params(3);
-   gamma_par=params(4);
-   glb_alpha=params(5);
-
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
-
-   sim_spread();
-   sim_spread();
-   _vbc_vec<float> pred_p(1,indicies.UBound());
-   for(int i=1;i<=indicies.UBound();i++)
+   _vbc_vec<float> pred_p(1,m_pars,1,indicies.UBound());
+   for(int m=1;m<=m_pars;m++)
    {
-      pred_p(i) = 1 - exp(-pow(glb_alpha*lakes(indicies(i)).pp(2010)+gamma_par,c_par));
+      d_par=params(m,1);
+      e_par= params(m,2);   
+      c_par=params(m,3);
+      gamma_par=params(m,4);
+      glb_alpha=params(m,5);
+
+      calc_traf();
+      calc_traf_mat();
+      calc_pp();
+
+      sim_spread();
+      sim_spread();
+      
+      for(int i=1;i<=indicies.UBound();i++)
+      {
+         pred_p(m,i) = 1 - exp(-pow(glb_alpha*lakes(indicies(i)).pp(2010)+gamma_par,c_par));
+      }
    }
    return(pred_p);
 }
