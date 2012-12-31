@@ -33,6 +33,7 @@ using namespace mcmcMD;
     float d_par=2; //0.288344;   //to be fit
     float e_par=0.8;        //to be fit
     float c_par=1;          //to be fit
+    float gamma_par=0;      //to be fit
     float glb_alpha=0.00001;          //to be fit (as a function of chem_vars)
     int n_lakes=1646;
     int n_sources=213;      //4496; with non grided Oi
@@ -654,7 +655,7 @@ float l_hood()
                 if(t_vec(lake_index)<t)
                     update_pp_l_hood(lake_index,t);
 
-                lh+= - pow(alpha*lakes(lake_index).pp(t),c_par); //Prob uninv to that year
+                lh+= - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv to that year
 //         cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
             }
             if(lakes(lake_index).discovered != 0) // discovered invaded
@@ -665,7 +666,7 @@ float l_hood()
                    if(t_vec(lake_index)<t)
                        update_pp_l_hood(lake_index,t);
     
-                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t),c_par);
+                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
                 }
                 lh+= log(1-exp(tmp_lh));
 //         cout << "B\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
@@ -677,7 +678,7 @@ float l_hood()
                if(t_vec(lake_index)<t)
                   update_pp_l_hood(lake_index,t);
 
-                tmp_lh += - pow(alpha*lakes(lake_index).pp(t),c_par);
+                tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
             }
             lh += log(1-exp(tmp_lh));
 //         cout << "C\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
@@ -719,14 +720,14 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    d_par=params(1);
    e_par= params(2);   
    c_par=params(3);
-   
+   gamma_par=params(4);
    if(!no_env)
    {
       for(int i=1;i<=n_chem_var+1;i++)
-         chem_pars(i)=params(3+i);
+         chem_pars(i)=params(4+i);
    }
    else
-      glb_alpha=params(4);
+      glb_alpha=params(5);
 
    calc_traf();
    calc_traf_mat();

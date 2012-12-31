@@ -186,11 +186,12 @@ if(run_type==1)
    // to smooth out stochastic surface.
    if(no_env)
    {
-      _vbc_vec<float>params1(1,4);
+      _vbc_vec<float>params1(1,5);
       params1(1)=1;
       params1(2)=0.25;
       params1(3)=2;
-      params1(4)=0.0001;   
+      params1(4)=0.0001;  
+      params1(5)=0.0001; 
       float garbage=l_hood();
       /*
       for(int i=1;i<=20;i++)
@@ -200,15 +201,15 @@ if(run_type==1)
       }
       */
 
-	      _vbc_vec<float> dat1(1,4);
-	      _vbc_vec<float> MLE_params(1,4);
+	      _vbc_vec<float> dat1(1,5);
+	      _vbc_vec<float> MLE_params(1,5);
 	      simplex::clsSimplex<float> gertzen_rep;
 	      gertzen_rep.set_param_small(1e-100);
-	      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,4, 1e-10);
+	      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,5, 1e-10);
 	      gertzen_rep.getParams(&MLE_params);
       
       cout << "\nMLE\n";
-      for(int i=1;i<=4;i++)
+      for(int i=1;i<=5;i++)
       {
          cout<< MLE_params(i) <<"\n";
       }
