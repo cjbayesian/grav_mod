@@ -26,7 +26,9 @@ int main(int argc,char *argv[])
  	// decode arguments
 	args(argc,argv);
    inits();
-   
+   if(run_type==6)
+      to_year=2010;
+
     // Read in Data //
     cout<< "Reading Data\n";
     read_data();
@@ -39,6 +41,7 @@ int main(int argc,char *argv[])
     calc_traf();
     calc_traf_mat();
     calc_pp(); //!!
+
 
    ofstream ll_("output/ll_test.dat");
    if(FALSE)
@@ -440,7 +443,35 @@ if(run_type==5)
 
 
 }
+/// Predictions from Bootstapped MLE ////
+if(run_type==6)
+{  
+   int n_pars = 5;
+   int m_pars = 1; //m reps of the bootstrap/posterior
+   _vbc_vec<float>params1(1,n_pars);
 
+   // Read parameters values from file //
+   ifstream mle_pars;
+   mle_pars.open("output/mle_pars.tab");
+   for(int i=1;i<=n_pars;i++)
+   {
+      mle_pars >> params1(i);
+   }
+   mle_pars.close();
+   // -- //
+
+
+   _vbc_vec<float> preds;
+   preds = predict_p(params1,val_lakes_index); //pars,indicies of validation set
+
+
+   // std.out //
+   for(int i=1;i<=n_val_lakes;i++)
+   {
+      cout << val_lakes_index(i) << "\t" << preds(i) << "\n";
+   }
+   // -- //
+}
 
    return 0;
 }

@@ -37,6 +37,7 @@ using namespace mcmcMD;
     float glb_alpha=0.00001;          //to be fit (as a function of chem_vars)
     int n_lakes=1646;
     int n_sources=213;      //4496; with non grided Oi
+    int n_val_lakes=88;    //Should be 100 -- need to review data parsing code.
     int n_chem_var=13;
     int from_year=1989;
     int to_year=2009;
@@ -46,6 +47,7 @@ using namespace mcmcMD;
     _vbc_vec<float> traf_mat(1,n_lakes,1,n_lakes);
     _vbc_vec<int> t_vec(1,n_lakes);
     _vbc_vec<int> sampled_index;
+    _vbc_vec<int> val_lakes_index(1,n_val_lakes);
 
 //debugging output //
     ofstream track_lake("output/tl.dat");
@@ -122,6 +124,7 @@ bool restrict_MCMC(float,int);
 
 float prior_MD(_vbc_vec<float>,int);
 bool restrict_MCMC_MD(_vbc_vec<float>);
+_vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>); //pars,indicies
 
 #endif;
 
@@ -272,7 +275,7 @@ void read_data()
     */
 
     _vbc_vec<int> tmp_index_sampled(1,n_lakes);
-    
+    int n_validation = 0;
     for(int i = 1;i<=n_lakes;i++)
 	{
         lakes(i).chem.redim(1,n_chem_var);
@@ -287,16 +290,20 @@ void read_data()
 
         // Catch for to_year < 2010.
         // modify lakes(i) to reflect missing information.
-        if(to_year < 2010)
-        {
-            if(lakes(i).discovered > to_year)
-            {
-               lakes(i).invaded = 0;
-               lakes(i).discovered=0;
-            }
-            if(lakes(i).last_abs > to_year)
-               lakes(i).last_abs = 0;
-        } 
+         if(lakes(i).discovered > 2009)
+         {
+            lakes(i).invaded = 0;
+            lakes(i).discovered=0;
+            n_validation++;
+            val_lakes_index(n_validation)=i;
+         }
+         if(lakes(i).last_abs > 2009)
+         {
+            lakes(i).last_abs = 0;
+            n_validation++;
+            val_lakes_index(n_validation)=i;
+         }
+
 
 
         if( (lakes(i).invaded == 1 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s))
@@ -309,6 +316,8 @@ void read_data()
             l_file >> lakes(i).chem(j);
         }
     }
+    cout << "Number of lakes in validation set = "<< n_validation << "\n";
+
     sampled_index.redim(1,n_sampled);
     for(int i = 1;i<=n_sampled;i++)
 	    sampled_index(i)=tmp_index_sampled(i);
@@ -339,6 +348,7 @@ void read_data()
 }
 void init_state()
 {
+    state.redim(from_year,to_year);
     for(int t=from_year;t<=to_year;t++)
     {
         state(t).inv.redim(1,n_lakes);
@@ -888,6 +898,29 @@ void sim_spread_posterior()
 }
 
 
+/////////////// Prediction probability vectors //////////////
+
+_vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies) //pars,indicies
+{
+   d_par=params(1);
+   e_par= params(2);   
+   c_par=params(3);
+   gamma_par=params(4);
+   glb_alpha=params(5);
+
+   calc_traf();
+   calc_traf_mat();
+   calc_pp();
+
+   sim_spread();
+   sim_spread();
+   _vbc_vec<float> pred_p(1,indicies.UBound());
+   for(int i=1;i<=indicies.UBound();i++)
+   {
+      pred_p(i) = 1 - exp(-pow(glb_alpha*lakes(indicies(i)).pp(2010)+gamma_par,c_par));
+   }
+   return(pred_p);
+}
 
 
 
