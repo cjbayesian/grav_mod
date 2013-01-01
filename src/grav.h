@@ -9,6 +9,7 @@
 #include<vbc_vector.h>
 #include<Simplex.h>
 #include<metro_hastingsMD.h>
+#include<iomanip>
 
 #define MATHLIB_STANDALONE 1
 #include <Rmath.h>
@@ -125,6 +126,7 @@ bool restrict_MCMC(float,int);
 float prior_MD(_vbc_vec<float>,int);
 bool restrict_MCMC_MD(_vbc_vec<float>);
 _vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>,int); //pars,indicies
+_vbc_vec<int> sample_w_replace(_vbc_vec<int>);
 
 #endif;
 
@@ -751,13 +753,12 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    {
         sim_spread();
         tmplhood(i) = l_hood();
-        cout << i << "\t" << tmplhood(i) <<"\n";
+        //cout << i << "\t" << tmplhood(i) <<"\n";
    }
 
    float qll=average(tmplhood);
-   
    for(int i=1;i<=params.UBound();i++)
-      cout<< params(i) <<"\t";
+      cout << setw(10) << params(i) <<"\t";
 
    cout << qll <<"\n";
    if(std::isnan(qll))
@@ -1012,4 +1013,18 @@ void write_pp()
         }
     }
    pp_file.close();
+}
+
+// Sample an integer vector with replacement. -- For generating bootstrap samples of lake indicies.
+_vbc_vec<int> sample_w_replace(_vbc_vec<int> vec)
+{
+   _vbc_vec<int> s_vec(1,vec.UBound());
+   int tmp_index;
+   for(int i=1;i<=vec.UBound();i++)
+   {
+      tmp_index = (int) runif(1,vec.UBound()+1);
+      s_vec(i) = vec(tmp_index);
+   }
+
+   return(s_vec);
 }

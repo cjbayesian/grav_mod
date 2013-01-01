@@ -1,4 +1,3 @@
-
 // To Compile use:
 // g++ -w -I/home/cchivers/c++/library/ -I/usr/share/R/include -o ../gb *.cpp /home/cchivers/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
 // g++ -w -I/home/cchivers/SchoolBackUp/c++/library/ -I/usr/share/R/include -o ../gb *.cpp /home/cchivers/SchoolBackUp/c++/library/libCJ -lRmath -lm -fopenmp -O3 -ftree-vectorize -msse2
@@ -187,37 +186,46 @@ if(run_type==1)
    // FIT ON TRAF_PARS & SPREAD PARS ONLY (NO ENV) //
    // need a likelihood function wrapper to call l_hood() multiple times and average the result
    // to smooth out stochastic surface.
-   if(no_env)
-   {
-      _vbc_vec<float>params1(1,5);
-      params1(1)=1;
-      params1(2)=0.25;
-      params1(3)=2;
-      params1(4)=0.0001;  
-      params1(5)=0.0001; 
-      float garbage=l_hood();
-      /*
-      for(int i=1;i<=20;i++)
-      {
-         params1(3)=params1(3)+0.00001; 
-         cout<< params1(3)<<"\t"<< MLE_l_hood(&params1,&params1) <<"\n";
-      }
-      */
+   // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
+   float garbage=l_hood();
+   int n_reps = 3;
+   int n_pars=5;
+   _vbc_vec<float>params1(1,n_pars);
+   params1(1)=1;
+   params1(2)=1;
+   params1(3)=2;
+   params1(4)=0.0001;  
+   params1(5)=0.0001;
+   _vbc_vec<float> dat1(1,n_pars);
+   _vbc_vec<float> MLE_params(1,n_pars);
 
-	      _vbc_vec<float> dat1(1,5);
-	      _vbc_vec<float> MLE_params(1,5);
-	      simplex::clsSimplex<float> gertzen_rep;
-	      gertzen_rep.set_param_small(1e-100);
-	      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,5, 1e-10);
-	      gertzen_rep.getParams(&MLE_params);
-      
-      cout << "\nMLE\n";
-      for(int i=1;i<=5;i++)
-      {
-         cout<< MLE_params(i) <<"\n";
-      }
+   _vbc_vec<int> tmp_index_sampled;
+   tmp_index_sampled = sampled_index;
+   ofstream par_file;
+   par_file.open("output/pred_pars.tab");
+   ofstream boot_file;
+   boot_file.open("output/boot_lakes.tab");
+   for(int i=1;i<=n_reps;i++)
+   {
+      //Bootstrap resample //
+      sampled_index = sample_w_replace(tmp_index_sampled);
+      for(int j=1;j<=n_sampled;j++)
+         boot_file << sampled_index(j) << "\t";
+      boot_file << "\n";
+      // --- //
+
+      simplex::clsSimplex<float> gertzen_rep;
+      gertzen_rep.set_param_small(1e-3);
+      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-3);
+      gertzen_rep.getParams(&MLE_params);
+
+      cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
+      for(int p=1;p<=n_pars;p++)
+         par_file << MLE_params(p) <<"\t";
+      par_file << "\n";
    }
- 
+   par_file.close();
+   boot_file.close();
 }
 
 
@@ -481,6 +489,23 @@ if(run_type==6)
       pred_p_file << "\n";
    }
    // -- //
+
+   //TEST SAMPLING FUNCTION sample_w_replace()//
+   /*
+   _vbc_vec<int> test_vec(1,4);
+   for(int i=1;i<=4;i++)
+      test_vec(i) = i;
+
+   _vbc_vec<int> rnd_vec;
+   
+   for(int i=1;i<=100;i++)
+   {
+      rnd_vec = sample_w_replace(test_vec);
+      for(int j=1;j<=4;j++)
+         cout << rnd_vec(j) << "\t";
+      cout << "\n";
+   }
+   */
 }
 
    return 0;
