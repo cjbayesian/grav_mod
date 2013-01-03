@@ -191,11 +191,11 @@ if(run_type==1)
    int n_reps = 3;
    int n_pars=5;
    _vbc_vec<float>params1(1,n_pars);
-   params1(1)=1;
-   params1(2)=1;
+   params1(1)=2;
+   params1(2)=0.8;
    params1(3)=2;
    params1(4)=0.0001;  
-   params1(5)=0.0001;
+   params1(5)=0.03;
    _vbc_vec<float> dat1(1,n_pars);
    _vbc_vec<float> MLE_params(1,n_pars);
 
@@ -212,10 +212,11 @@ if(run_type==1)
       for(int j=1;j<=n_sampled;j++)
          boot_file << sampled_index(j) << "\t";
       boot_file << "\n";
+      boot_file.flush();
       // --- //
 
       simplex::clsSimplex<float> gertzen_rep;
-      gertzen_rep.set_param_small(1e-3);
+      //gertzen_rep.set_param_small(1e-3);
       gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-3);
       gertzen_rep.getParams(&MLE_params);
 
@@ -389,13 +390,31 @@ if(run_type==4)
 /// Just whatever tests ////
 if(run_type==5)
 {  
+   ofstream ll_file("output/ll.dat");
+   int n_pars=5;
+   _vbc_vec<float>params1(1,n_pars);
+   params1(1)=2;
+   params1(2)=0.8;
+   params1(3)=2;
+   params1(4)=0;  
+   params1(5)=0;
+   _vbc_vec<float> dat1(1,n_pars);
+
+   for(int i=1;i<=30;i++)
+   {
+      params1(5) +=0.005;
+      for(int p=1;p<=n_pars;p++)
+         ll_file << params1(p) << "\t";
+      ll_file << MLE_l_hood(&params1, &dat1) << "\n";
+   }
+
+   ll_file.close();
 
    /*
-   ofstream ll_file("output/ll.dat");
    ofstream n_inv_file("output/n_inv_file.dat");
-   e_par=0;
+   e_par=1;
    d_par=1;
-   c_par=1.5;
+   c_par=0;
    glb_alpha=0.005;
 
    calc_traf();
@@ -429,11 +448,13 @@ if(run_type==5)
    ll_file.close();
 
     // MLE at d=e=1,c=1.5 : glb_alpha=0.00081
-   */
+   
    e_par=0.25;
    d_par=1;
    c_par=1.5;
    glb_alpha=0.005;
+
+   /*
    calc_traf();
    calc_traf_mat();
    calc_pp();
@@ -448,19 +469,23 @@ if(run_type==5)
    }
      
    t_file.close();
-
+   */
 
 }
 /// Predictions from Bootstapped MLE ////
 if(run_type==6)
 {  
+   //m reps of the bootstrap/posterior
+   int m_pars = wc_l("output/pred_pars.tab");
    int n_pars = 5;
-   int m_pars = 2; //m reps of the bootstrap/posterior
+   cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
+
    _vbc_vec<float>params1(1,m_pars,1,n_pars);
 
    // Read parameters values from file //
    ifstream pred_pars;
    pred_pars.open("output/pred_pars.tab");
+
    for(int i=1;i<=m_pars;i++)
    {
       for(int j=1;j<=n_pars;j++)
@@ -471,14 +496,16 @@ if(run_type==6)
    pred_pars.close();
    // -- //
 
+   //for(int i=1;i<=val_lakes_index.UBound();i++) //
+   //   cout << i <<" "<< val_lakes_index(i) << "\n";
 
    _vbc_vec<float> preds;
    preds = predict_p(params1,val_lakes_index,m_pars); //pars,indicies of validation set
 
-
-   // Write to file //
+   // Write predictions to file //
    ofstream pred_p_file;
    pred_p_file.open("output/pred_p.tab");
+   cout << "---------------- " << "\n";
    for(int i=1;i<=n_val_lakes;i++)
       pred_p_file << val_lakes_index(i) << "\t";
    pred_p_file << "\n";
@@ -488,7 +515,17 @@ if(run_type==6)
          pred_p_file << preds(m,i) << "\t";
       pred_p_file << "\n";
    }
+   pred_p_file.close();
    // -- //
+
+   // Write Validation lakes outcomes to file //
+   ofstream val_d_file;
+   val_d_file.open("output/val_lakes.dat");
+   for(int i=1;i<=n_val_lakes;i++)
+      val_d_file << lakes(val_lakes_index(i)).val_invaded << "\n";
+   val_d_file.close();
+   // -- //
+
 
    //TEST SAMPLING FUNCTION sample_w_replace()//
    /*

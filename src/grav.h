@@ -38,7 +38,7 @@ using namespace mcmcMD;
     float glb_alpha=0.00001;          //to be fit (as a function of chem_vars)
     int n_lakes=1646;
     int n_sources=213;      //4496; with non grided Oi
-    int n_val_lakes=88;    //Should be 100 -- need to review data parsing code.
+    int n_val_lakes;    //Should be 100 -- need to review data parsing code.
     int n_chem_var=13;
     int from_year=1989;
     int to_year=2009;
@@ -49,6 +49,7 @@ using namespace mcmcMD;
     _vbc_vec<int> t_vec(1,n_lakes);
     _vbc_vec<int> sampled_index;
     _vbc_vec<int> val_lakes_index(1,n_val_lakes);
+    _vbc_vec<int> val_lakes_inv_index(1,n_lakes);
 
 //debugging output //
     ofstream track_lake("output/tl.dat");
@@ -62,12 +63,13 @@ class clsLake
 	public:
 		float Wj,x,y,alpha;
 		bool invaded;
-        int discovered;
-        int last_abs;
-        _vbc_vec<float> chem;
+      bool val_invaded;
+      int discovered;
+      int last_abs;
+      _vbc_vec<float> chem;
 		_vbc_vec<float> Uij;
 		_vbc_vec<float> Qjt;
-        _vbc_vec<float> pp;
+      _vbc_vec<float> pp;
 	};
 class clsSource
 	{
@@ -116,6 +118,7 @@ void write_inv_stat();
 void write_pp();
 
 float average(_vbc_vec<float> );
+int wc_l(string);
 float MLE_l_hood(_vbc_vec<float> *,_vbc_vec<float> *);
 
 void likelihood_wrapperMCMC(_vbc_vec<float> *, float *,int );
@@ -277,7 +280,10 @@ void read_data()
     */
 
     _vbc_vec<int> tmp_index_sampled(1,n_lakes);
+    _vbc_vec<int> tmp_val_lakes_index(1,n_lakes);    
+    _vbc_vec<int> tmp_val_inv_lakes_index(1,n_lakes); 
     int n_validation = 0;
+    int n_invaded_in_validation_set = 0;
     for(int i = 1;i<=n_lakes;i++)
 	{
         lakes(i).chem.redim(1,n_chem_var);
@@ -292,23 +298,27 @@ void read_data()
 
         // Catch for to_year < 2010.
         // modify lakes(i) to reflect missing information.
+         lakes(i).val_invaded=0;
          if(lakes(i).discovered > 2009)
          {
-            lakes(i).invaded = 0;
+            lakes(i).invaded=0;
+            lakes(i).val_invaded=1;
             lakes(i).discovered=0;
             n_validation++;
-            val_lakes_index(n_validation)=i;
+            tmp_val_lakes_index(n_validation)=i;
+            n_invaded_in_validation_set++;
+            tmp_val_inv_lakes_index(n_invaded_in_validation_set)=i;
          }
          if(lakes(i).last_abs > 2009)
          {
             lakes(i).last_abs = 0;
             n_validation++;
-            val_lakes_index(n_validation)=i;
+            tmp_val_lakes_index(n_validation)=i;
          }
 
 
 
-        if( (lakes(i).invaded == 1 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s))
+        if( (lakes(i).discovered != 0 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s) and validation lakes)
         {
             n_sampled++;
             tmp_index_sampled(n_sampled)=i;
@@ -323,6 +333,15 @@ void read_data()
     sampled_index.redim(1,n_sampled);
     for(int i = 1;i<=n_sampled;i++)
 	    sampled_index(i)=tmp_index_sampled(i);
+
+    n_val_lakes = n_validation;
+    val_lakes_index.redim(1,n_validation);
+    for(int i = 1;i<=n_validation;i++)
+      val_lakes_index(i)=tmp_val_lakes_index(i);
+
+    val_lakes_inv_index.redim(1,n_invaded_in_validation_set);
+    for(int i = 1;i<=n_invaded_in_validation_set;i++)
+      val_lakes_inv_index(i)=tmp_val_inv_lakes_index(i);
 
     l_file.close();
 
@@ -903,25 +922,36 @@ void sim_spread_posterior()
 
 _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pars) //pars,indicies
 {
-   _vbc_vec<float> pred_p(1,m_pars,1,indicies.UBound());
+   _vbc_vec<float> pred_p(1,m_pars,1,n_val_lakes);
+
    for(int m=1;m<=m_pars;m++)
    {
+
       d_par=params(m,1);
       e_par= params(m,2);   
       c_par=params(m,3);
-      gamma_par=params(m,4);
+      gamma_par=0; //params(m,4);
       glb_alpha=params(m,5);
-
       calc_traf();
       calc_traf_mat();
       calc_pp();
 
       sim_spread();
       sim_spread();
-      
-      for(int i=1;i<=indicies.UBound();i++)
+      int cal_from;
+      for(int i=1;i<=n_val_lakes;i++)
       {
-         pred_p(m,i) = 1 - exp(-pow(glb_alpha*lakes(indicies(i)).pp(2010)+gamma_par,c_par));
+         // 1 - prob of remaining uninvaded during the period since last observed absence
+         if(lakes(indicies(i)).last_abs != 0)
+            cal_from = lakes(indicies(i)).last_abs;
+         else
+            cal_from = from_year;
+   
+         float log_p_uninv = 0;
+         for(int t=cal_from+1;t<=2010;t++)
+            log_p_uninv += -pow(glb_alpha*lakes(indicies(i)).pp(t)+gamma_par,c_par);
+
+          pred_p(m,i) = 1 - exp(log_p_uninv);
       }
    }
    return(pred_p);
@@ -1027,4 +1057,16 @@ _vbc_vec<int> sample_w_replace(_vbc_vec<int> vec)
    }
 
    return(s_vec);
+}
+
+// Emulates wc -l (number of lines in a file)
+int wc_l(string path_to_file)
+{
+   int number_of_lines=0;
+   std::string line;
+   std::ifstream myfile(path_to_file.c_str());
+   while (std::getline(myfile, line))
+        ++number_of_lines;
+   myfile.close();
+   return(number_of_lines);
 }

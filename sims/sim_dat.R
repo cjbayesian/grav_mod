@@ -1,7 +1,7 @@
 ########### Sim data for testing Bayesian Gravity model ############
 rm(list=ls())
 n_sources<-10
-n_lakes<-100
+n_lakes<-500
 alpha<-runif(1,0,0.25)
 error_sd<-0.75
 
@@ -10,7 +10,7 @@ error_sd<-0.75
     sources<-data.frame(x=runif(n_sources,574653.0,693691.5),y=runif(n_sources,4972658,5056544)) 
 
     # sum(oi) = 40937 #actual
-    sources$oi<-floor(runif(n_sources,0,(sources$x+sources$y)/1000000))
+    sources$oi<-floor(runif(n_sources,0,(sources$x+sources$y)/10000))
     write.table(sources$oi,file='Oi.csv',row.names=FALSE,col.names=FALSE,sep='\t')
 
 #### sim lakes ####
@@ -32,9 +32,9 @@ error_sd<-0.75
 
     ch_params<-runif(13+1,-0.4,0.4)
     #ch_params[1]<- runif(1,-4,-1) #Intercept -> alpha btw 0.01814993 and 0.3132617
-    ch_params[1]<-0
+    ch_params[1]<- -3
 
-    ch_params[4:14]<-0 ## to test on intercept only (equiv to testing common alpha)
+    ch_params[2:14]<-0 ## to test on intercept only (equiv to testing common alpha)
     #ch_params[2]<- 1
 
     ## Logit function (alpha=f(chem))
@@ -48,7 +48,7 @@ error_sd<-0.75
     epsilon<-rnorm(n_lakes,0,error_sd)
     for(l in 1:n_lakes)
     {
-        z_lake[l]<-ch_params[1]+sum(ch_params[2:14]*chem[l,]) + epsilon[l]
+        z_lake[l]<-ch_params[1]+sum(ch_params[2:14]*chem[l,]) #+ epsilon[l]
         alphas[l]<-logit_fn(z_lake[l])
     }
 
@@ -103,7 +103,7 @@ error_sd<-0.75
     write.table(non_spread_pp,file='pp.dat',col.names=FALSE,row.names=FALSE,sep='\t')
 
     seed_lake<-which.max(lakes$area)
-    c_par<-1
+    c_par<-2
     all_inv<-TRUE
     none_inv<-TRUE
     while(all_inv || none_inv)
@@ -156,9 +156,9 @@ error_sd<-0.75
     #N_obs<-c(5,10,15,20,25)
     #N_obs<-c(25,20,15,10,5)
  #   N_obs<-c(75,75,75,75,75)
- #   sample_years<-c(1995,2000,2005,2008,2010)
-    sample_years<-1991:2010
-    N_obs<-rep(90,length(sample_years))
+    sample_years<-c(1995,2005,2010)
+    #sample_years<-1991:2010
+    N_obs<-rep(50,length(sample_years))
 
     # Corresponds to columns 4,5,6 in data table
     invaded<-rep(0,n_lakes)
@@ -190,6 +190,9 @@ error_sd<-0.75
         }
     }
 
+### Identify lakes that were sampled in 2010 (validation set)
+is_validation <- last_obs_uninv == 2010 | first_obs_inv == 2010
+validation_index <- which(is_validation)
 
 
 #### Wrap up lakes info and write to file ####
@@ -197,6 +200,9 @@ error_sd<-0.75
     write_lakes<-cbind(write_lakes,signif(chem,3))
 
     write.table(write_lakes,file='simmed_lakes.csv',col.names=FALSE,row.names=FALSE,sep='\t')
+
+    # Validation data
+    write.table(invaded[validation_index],file='val_lakes.dat',col.names=FALSE,row.names=FALSE,sep='\t')
 
     # for ploting diagnostics
     write.table(inv_year,file='inv_year.csv',row.names=FALSE,col.names=FALSE)
