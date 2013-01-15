@@ -393,11 +393,16 @@ if(run_type==5)
    ofstream ll_file("output/ll.dat");
    int n_pars=5;
    _vbc_vec<float>params1(1,n_pars);
-   params1(1)=2;
-   params1(2)=0.8;
+   params1(1)=1.27; //according to gertzen 2011
+   params1(2)=1;
    params1(3)=2;
    params1(4)=0;  
    params1(5)=0;
+
+   calc_traf();
+   calc_traf_mat();
+   write_traf_mat();
+   /*
    _vbc_vec<float> dat1(1,n_pars);
 
    for(int i=1;i<=30;i++)
