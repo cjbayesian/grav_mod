@@ -195,7 +195,7 @@ if(run_type==1)
    params1(2)=0.8;
    params1(3)=2;
    params1(4)=0.0001;  
-   params1(5)=0.03;
+   params1(5)=0.0001;
    _vbc_vec<float> dat1(1,n_pars);
    _vbc_vec<float> MLE_params(1,n_pars);
 

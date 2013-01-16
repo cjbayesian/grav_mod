@@ -752,6 +752,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    e_par= params(2);   
    c_par=params(3);
    gamma_par=params(4);
+
    if(!no_env)
    {
       for(int i=1;i<=n_chem_var+1;i++)
@@ -759,6 +760,10 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    }
    else
       glb_alpha=params(5);
+
+   // Parameter bounds //
+   if(d_par <=0 || e_par < 0 || c_par < 0 || gamma_par < 0 || glb_alpha < 0 )
+      return(10000000);
 
    calc_traf();
    calc_traf_mat();
@@ -926,7 +931,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
 
    for(int m=1;m<=m_pars;m++)
    {
-
+      cout << m << " of " << m_pars << "\n";
       d_par=params(m,1);
       e_par= params(m,2);   
       c_par=params(m,3);
