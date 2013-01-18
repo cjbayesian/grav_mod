@@ -188,14 +188,13 @@ if(run_type==1)
    // to smooth out stochastic surface.
    // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
    float garbage=l_hood();
-   int n_reps = 3;
-   int n_pars=5;
+   int n_reps = 100;
+   int n_pars=4; //no e (area exponent)
    _vbc_vec<float>params1(1,n_pars);
    params1(1)=2;
-   params1(2)=0.8;
-   params1(3)=2;
+   params1(2)=2;
+   params1(3)=0.0001;
    params1(4)=0.0001;  
-   params1(5)=0.0001;
    _vbc_vec<float> dat1(1,n_pars);
    _vbc_vec<float> MLE_params(1,n_pars);
 
@@ -217,13 +216,14 @@ if(run_type==1)
 
       simplex::clsSimplex<float> gertzen_rep;
       //gertzen_rep.set_param_small(1e-3);
-      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-3);
+      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-1);
       gertzen_rep.getParams(&MLE_params);
 
       cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
       for(int p=1;p<=n_pars;p++)
          par_file << MLE_params(p) <<"\t";
       par_file << "\n";
+      par_file.flush();
    }
    par_file.close();
    boot_file.close();

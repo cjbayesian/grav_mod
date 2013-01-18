@@ -749,9 +749,10 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
    _vbc_vec<float> params = *pars;
    d_par=params(1);
-   e_par= params(2);   
-   c_par=params(3);
-   gamma_par=params(4);
+   //e_par= params(2);   
+   e_par = 1;
+   c_par=params(2);
+   gamma_par=params(3);
 
    if(!no_env)
    {
@@ -759,7 +760,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
          chem_pars(i)=params(4+i);
    }
    else
-      glb_alpha=params(5);
+      glb_alpha=params(4);
 
    // Parameter bounds //
    if(d_par <=0 || e_par < 0 || c_par < 0 || gamma_par < 0 || glb_alpha < 0 )
@@ -769,8 +770,6 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    calc_traf_mat();
    calc_pp();
 
-   sim_spread();
-   sim_spread();
    sim_spread();
 
    for(int i=1;i<=n_sim_for_smooth;i++)
