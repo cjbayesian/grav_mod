@@ -3,3 +3,4 @@ sims/*.csv
 output/*
 gb
 images/
+plots/
