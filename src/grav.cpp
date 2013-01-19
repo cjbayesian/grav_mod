@@ -482,7 +482,7 @@ if(run_type==6)
 {  
    //m reps of the bootstrap/posterior
    int m_pars = wc_l("output/pred_pars.tab");
-   int n_pars = 5;
+   int n_pars = 4;
    cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
 
    _vbc_vec<float>params1(1,m_pars,1,n_pars);

@@ -932,10 +932,11 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
    {
       cout << m << " of " << m_pars << "\n";
       d_par=params(m,1);
-      e_par= params(m,2);   
-      c_par=params(m,3);
-      gamma_par=0; //params(m,4);
-      glb_alpha=params(m,5);
+      //e_par= params(m,2);   
+      e_par = 1;
+      c_par=params(m,2);
+      params(m,3);
+      glb_alpha=params(m,4);
       calc_traf();
       calc_traf_mat();
       calc_pp();
