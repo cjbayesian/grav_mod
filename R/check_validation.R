@@ -22,7 +22,10 @@ points(lakes[val_index[ord],4],pch=3)
 ## Inv prob as a function of lake size.
 plot(lakes[val_index[ord],1],pr[1,ord],col=lakes[val_index[ord],4]+1,pch=20,ylim=c(0,1))
 for(i in 1:nrow(pr))
+{
    points(lakes[val_index[ord],1],pr[i,ord],col=lakes[val_index[ord],4]+1,pch=20)
+   lines(lakes[val_index[ord],1],pr[i,ord])
+}
 
 ## Overal rate of predicted invasions
 total_predicted<-apply(pr,1,sum)

@@ -31,6 +31,7 @@ using namespace mcmcMD;
     bool ll=FALSE;
     int est_env=13;
     bool sim=FALSE;
+    bool gridded=TRUE;
     float d_par=2; //0.288344;   //to be fit
     float e_par=0.8;        //to be fit
     float c_par=1;          //to be fit
@@ -201,8 +202,15 @@ void inits()
    init_file >> no_env;
    init_file >> tmp;
    init_file >> n_sim_for_smooth;
+   init_file >> tmp;
+   init_file >> gridded;
+   init_file >> tmp;
+   init_file >> n_sources;
 
    init_file.close();
+
+   d_matrix.redim(1,n_sources,1,n_lakes);
+   sources.redim(1,n_sources);
 }
 
 
@@ -224,7 +232,12 @@ void read_data()
     if(sim)
         d_file.open("sims/distance_matrix.csv"); //distance_matrix.csv        
     else
+   {
+      if(gridded)
         d_file.open("../2010_bytho_data/distance_matrix_grd.csv"); //distance_matrix.csv
+      else
+         d_file.open("../2010_bytho_data/distance_matrix.csv"); //distance_matrix.csv
+   }
     for(int i = 1;i<=n_sources;i++)
 	{
         sources(i).Dij.redim(1,n_lakes);
@@ -241,9 +254,14 @@ void read_data()
     // Oi //
     ifstream o_file;
     if(sim)
-        o_file.open("sims/Oi.csv"); //Oi.csv (non-gridded)          
+        o_file.open("sims/Oi.csv");        
     else
-        o_file.open("../2010_bytho_data/Oi_grd.csv"); //Oi.csv (non-gridded)
+    {
+         if(gridded)
+            o_file.open("../2010_bytho_data/Oi_grd.csv"); //gridded 
+         else
+            o_file.open("../2010_bytho_data/Oi.cv"); // (non-gridded)
+    }
     for(int i = 1;i<=n_sources;i++)
 	{
          o_file >> sources(i).Oi;
