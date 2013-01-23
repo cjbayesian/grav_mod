@@ -193,8 +193,8 @@ if(run_type==1)
    _vbc_vec<float>params1(1,n_pars);
    params1(1)=2;
    params1(2)=2;
-   params1(3)=0.0001;
-   params1(4)=0.0001;  
+   params1(3)=0.00001;
+   params1(4)=0.1;  
    _vbc_vec<float> dat1(1,n_pars);
    _vbc_vec<float> MLE_params(1,n_pars);
 
@@ -202,31 +202,47 @@ if(run_type==1)
    tmp_index_sampled = sampled_index;
    ofstream par_file;
    par_file.open("output/pred_pars.tab");
-   ofstream boot_file;
-   boot_file.open("output/boot_lakes.tab");
-   for(int i=1;i<=n_reps;i++)
-   {
-      //Bootstrap resample //
-      sampled_index = sample_w_replace(tmp_index_sampled);
-      for(int j=1;j<=n_sampled;j++)
-         boot_file << sampled_index(j) << "\t";
-      boot_file << "\n";
-      boot_file.flush();
-      // --- //
 
+   if(boot)
+   {
+      ofstream boot_file;
+      boot_file.open("output/boot_lakes.tab");
+      for(int i=1;i<=n_reps;i++)
+      {
+         //Bootstrap resample //
+         sampled_index = sample_w_replace(tmp_index_sampled);
+         for(int j=1;j<=n_sampled;j++)
+            boot_file << sampled_index(j) << "\t";
+         boot_file << "\n";
+         boot_file.flush();
+         // --- //
+
+         simplex::clsSimplex<float> gertzen_rep;
+         //gertzen_rep.set_param_small(1e-3);
+         gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-1);
+         gertzen_rep.getParams(&MLE_params);
+
+         cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
+         for(int p=1;p<=n_pars;p++)
+            par_file << MLE_params(p) <<"\t";
+         par_file << "\n";
+         par_file.flush();
+      }
+      boot_file.close();
+   }else{
       simplex::clsSimplex<float> gertzen_rep;
       //gertzen_rep.set_param_small(1e-3);
       gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-1);
       gertzen_rep.getParams(&MLE_params);
 
-      cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
+      cout << "\n\nMLE\n";
       for(int p=1;p<=n_pars;p++)
          par_file << MLE_params(p) <<"\t";
       par_file << "\n";
       par_file.flush();
    }
    par_file.close();
-   boot_file.close();
+
 }
 
 

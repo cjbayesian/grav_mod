@@ -34,5 +34,5 @@ abline(v=sum(lakes[val_index,4])) ## Add actual
 
 ########### AUC #################
 source('~/AUC/AUC.R')
-AUC(d=lakes[val_index,4],pred=pr[3,],plot=TRUE)
+AUC(d=lakes[val_index,4],pred=pr[1,],plot=TRUE)
 

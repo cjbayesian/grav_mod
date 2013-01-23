@@ -32,6 +32,7 @@ using namespace mcmcMD;
     int est_env=13;
     bool sim=FALSE;
     bool gridded=TRUE;
+    bool boot=TRUE;
     float d_par=2; //0.288344;   //to be fit
     float e_par=0.8;        //to be fit
     float c_par=1;          //to be fit
@@ -107,6 +108,8 @@ void get_gen_pars();
 void sample_t_l(int);
 
 float calc_alpha(int);
+void calc_pp();
+void calc_pp_validation(_vbc_vec<int>);
 void calc_pp_switch(int,int,int);
 void update_sim_pp(int);
 void update_pp_l_hood(int, int);
@@ -206,6 +209,8 @@ void inits()
    init_file >> gridded;
    init_file >> tmp;
    init_file >> n_sources;
+   init_file >> tmp;
+   init_file >> boot;
 
    init_file.close();
 
@@ -260,7 +265,7 @@ void read_data()
          if(gridded)
             o_file.open("../2010_bytho_data/Oi_grd.csv"); //gridded 
          else
-            o_file.open("../2010_bytho_data/Oi.cv"); // (non-gridded)
+            o_file.open("../2010_bytho_data/Oi.csv"); // (non-gridded)
     }
     for(int i = 1;i<=n_sources;i++)
 	{
@@ -499,6 +504,24 @@ void calc_pp()
             }
         }
     }
+}
+void calc_pp_validation(_vbc_vec<int> indicies) //for calculated pp in each relevant year for the validation lakes.
+{
+   int lake_to_index, lake_from_index;
+   for(int l=1;l<=indicies.UBound();l++)
+   {
+      lake_to_index = indicies(l);
+      for(int t=from_year+1;t<=to_year;t++)
+      {      
+         lakes(lake_to_index).pp(t) = lakes(lake_to_index).pp(t-1);
+         for(int i=1;i<=state(t-1).n_new_inv;i++)
+         {
+            lake_from_index=state(t-1).new_inv(i);
+            lakes(lake_to_index).pp(t) += traf_mat(lake_from_index,lake_to_index);
+         }
+         cout << lake_to_index << "\t" << lakes(lake_to_index).pp(t) << "\n";
+      }
+   }
 }
 void calc_pp_slow()
 {
@@ -961,6 +984,10 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
 
       sim_spread();
       sim_spread();
+      sim_spread();
+      calc_pp_validation(indicies); // fill in all pp values for validation lakes
+                                    // since calc_pp() is optimized to only calc pp for uninvaded lakes.
+
       int cal_from;
       for(int i=1;i<=n_val_lakes;i++)
       {
