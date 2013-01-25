@@ -110,7 +110,6 @@ void sample_t_l(int);
 float calc_alpha(int);
 void calc_pp();
 void calc_pp_validation(_vbc_vec<int>);
-void calc_pp_switch(int,int,int);
 void update_sim_pp(int);
 void update_pp_l_hood(int, int);
 int which_min(int,int);
@@ -241,7 +240,7 @@ void read_data()
       if(gridded)
         d_file.open("../2010_bytho_data/distance_matrix_grd.csv"); //distance_matrix.csv
       else
-         d_file.open("../2010_bytho_data/distance_matrix.csv"); //distance_matrix.csv
+         d_file.open("../2010_bytho_data/cj_roadconn.tab"); //distance_matrix.csv
    }
     for(int i = 1;i<=n_sources;i++)
 	{
@@ -451,43 +450,6 @@ void calc_traf_mat()
 
 // *************************************************
 
-void calc_pp_switch(int l, int before, int after) //calculate the pp by only accounting for the change of a single lake status. STATE SPACE MODEL
-{
-    before=which_min(before,to_year);
-    after=which_min(after,to_year);
-
-    int lake_to_index,lake_from_index;
-    if(before > after) //moved back in time (added propagules to the system)
-    {
-        for(int t = after; t<=before-1; t++)
-        {
-            for(int j=1;j<=state(t+1).n_calc_pp;j++) //n_calc_pp=the number of uninvaded+newly invaded sites
-            {
-                lake_to_index=state(t+1).calc_pp_index(j);
-                lakes(lake_to_index).pp(t+1) += traf_mat(l,lake_to_index);
-            }
-        }
-    }else if(after > before) //moved forward in time (subtracted propagules from the system)
-    {
-        for(int t = before; t<=after-1; t++)
-        {
-            //subtract propagules coming from l
-            for(int j=1;j<=state(t+1).n_calc_pp;j++) //n_calc_pp=the number of uninvaded+newly invaded sites
-            {
-                lake_to_index=state(t+1).calc_pp_index(j);
-                lakes(lake_to_index).pp(t+1) -= traf_mat(l,lake_to_index);
-            }
-            //calc pp to l for the years before+1 to after
-            for(int i=1;i<=state(t).n_new_inv;i++)
-            {
-                lake_from_index=state(t).new_inv(i);
-                lakes(l).pp(t+1) += traf_mat(lake_from_index,l);                
-            }
-        }
-    }   //stayed the same
-        //do nothing
-}
-
 void calc_pp()
 {
     int lake_to_index, lake_from_index;
@@ -523,28 +485,7 @@ void calc_pp_validation(_vbc_vec<int> indicies) //for calculated pp in each rele
       }
    }
 }
-void calc_pp_slow()
-{
-    for(int t=from_year; t<=to_year; t++)
-    {
-        for(int s=1;s<=n_sources;s++)
-        {
-            sources(s).Xit(t)=sources(s).Xit(t-1);
-            for(int i=1;i<=state(t).n_new_inv;i++)
-                sources(s).Xit(t) += sources(s).Gij(state(t).new_inv(i));
-        }
-    }
-    for(int t=from_year+1;t<=to_year;t++)
-    {
-        for(int i=1;i<=state(t).n_calc_pp;i++) //n_calc_pp=the number of uninvaded+newly invaded sites
-        {
-            int lake_index=state(t).calc_pp_index(i);
-            lakes(lake_index).pp(t)=0;
-            for(int s=1;s<=n_sources;s++)
-                lakes(lake_index).pp(t) =+ sources(s).Xit(t-1) * sources(s).Oi * sources(s).Gij(lake_index);
-        }
-    }
-}
+
 void calc_state()
 {
     for(int t=from_year;t<=to_year;t++)
