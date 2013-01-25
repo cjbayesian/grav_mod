@@ -78,7 +78,7 @@ class clsSource
 	public:
 		float Ai;
 		int Oi;
-        _vbc_vec<float> Xit;
+        _vbc_vec<float> Xit; //prop_invaded
         _vbc_vec<float> Dij;
 		_vbc_vec<float> Gij;
 	};
@@ -621,7 +621,9 @@ void sim_spread()
         }
         if(t<to_year)
             update_sim_pp(t);
+      cout << state(t).n_inv << " ";
     }
+   cout << "\n";
 }
 void update_sim_pp(int t)
 {

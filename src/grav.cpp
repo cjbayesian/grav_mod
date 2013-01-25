@@ -94,27 +94,6 @@ int main(int argc,char *argv[])
        }
    }
 
-   if(FALSE) //likelihood profile across state-space.
-   {
-       int li_=400; //test lake
-       for(int li=li_;li<=420;li++)
-       {
-           t_vec(li)=from_year+1;
-           int before=t_vec(li);
-           int after;
-           for(int t=from_year+1;t<=to_year+1;t++)
-           {
-               t_vec(li)=t;
-               after=t_vec(li);
-               calc_state();
-               calc_pp_switch(li,before,after);
-               ll_ << li << "\t" << t << "\t" << l_hood()<< endl;
-               before=after;
-           }
-       }
-   }
-
-
    //Just sim under the true alpha to see the t_vec distribution
    // to compare with sim_dat.R
    if(FALSE)
@@ -191,10 +170,10 @@ if(run_type==1)
    int n_reps = 100;
    int n_pars=4; //no e (area exponent)
    _vbc_vec<float>params1(1,n_pars);
-   params1(1)=2;
-   params1(2)=2;
-   params1(3)=0.00001;
-   params1(4)=0.1;  
+   params1(1)=1.27;
+   params1(2)=1.48;
+   params1(3)=0.0000489;
+   params1(4)=0.00105;  
    _vbc_vec<float> dat1(1,n_pars);
    _vbc_vec<float> MLE_params(1,n_pars);
 
