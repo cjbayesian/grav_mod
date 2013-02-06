@@ -605,7 +605,7 @@ void sim_spread()
 
              alpha=calc_alpha(lake_index);
 
-            if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t), c_par ) )  >= runif(0,1) 
+            if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t) + gamma_par, c_par ) )  >= runif(0,1) 
                      || lakes(lake_index).discovered==t ) 
                      && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
             {
