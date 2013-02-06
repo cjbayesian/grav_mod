@@ -278,7 +278,7 @@ void read_data()
     if(sim)
         l_file.open("sims/simmed_lakes.csv");
     else    
-        l_file.open("../2010_bytho_data/lakes_processed.csv");
+        l_file.open("../2010_bytho_data/lakes_processed_erin_fix.csv");//  lakes_processed.csv");
     /* File structure:
     "Hectares",
     "UTM_X",
@@ -605,8 +605,9 @@ void sim_spread()
 
              alpha=calc_alpha(lake_index);
 
-            if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t), c_par ) )  >= runif(0,1) || lakes(lake_index).discovered==t ) 
-                    && lakes(lake_index).last_abs < t ) // invade stochastically and restrict to observed pattern
+            if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t), c_par ) )  >= runif(0,1) 
+                     || lakes(lake_index).discovered==t ) 
+                     && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
             {
                 state(t).n_inv++;
                 state(t).n_new_inv++;
@@ -916,18 +917,18 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
    {
       cout << m << " of " << m_pars << "\n";
       d_par=params(m,1);
-      //e_par= params(m,2);   
+      //e_par= params(m,2);
       e_par = 1;
       c_par=params(m,2);
-      params(m,3);
+      gamma_par=params(m,3);
       glb_alpha=params(m,4);
       calc_traf();
       calc_traf_mat();
       calc_pp();
 
-      sim_spread();
-      sim_spread();
-      sim_spread();
+      for(int i=1;i<=50;i++)
+         sim_spread();
+
       calc_pp_validation(indicies); // fill in all pp values for validation lakes
                                     // since calc_pp() is optimized to only calc pp for uninvaded lakes.
 

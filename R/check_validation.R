@@ -33,7 +33,8 @@ for(i in 1:nrow(pr))
 #abline(v=sum(lakes[val_index,4])) ## Add actual
 
 ########### AUC #################
-source('~/AUC/AUC.R')
+#source('~/AUC/AUC.R')
+source('~/SchoolBackUp/AUC/AUC.R')
 x11()
 AUC(d=lakes[val_index,4],pred=pr[1,],plot=TRUE)
 
