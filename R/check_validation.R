@@ -2,9 +2,13 @@
 lakes<-read.csv('../2010_bytho_data/lakes_processed.csv',sep='\t',header=FALSE)
 pr<-read.csv('output/pred_p.tab',sep='\t')
 
+pr_sim<-read.csv('output/val_sim_props.tab',sep='\t',head=FALSE)
+
 pr<-as.matrix(pr)
 pr<-pr[,1:(ncol(pr)-1)]
 
+pr_sim<-as.matrix(pr_sim)
+pr_sim<-pr_sim[,1:(ncol(pr_sim)-1)]
 
 mean_pr<-apply(pr,2,mean)
 ord<-order(mean_pr)

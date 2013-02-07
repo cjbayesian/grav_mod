@@ -941,7 +941,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
          sim_spread();
          for(int i=1;i<=n_val_lakes;i++)
          {
-            if(t_vec(indicies(i))<2011 && t_vec(indicies(i)) != 0)
+            if(t_vec(indicies(i)) != 0)
                prop_val_invaded(i) += 1;
             cout << prop_val_invaded(i) << "\t";
          }
