@@ -382,95 +382,116 @@ if(run_type==4)
    write_inv_stat();
 }
 
-/// Just whatever tests ////
+/// Holdout sets for internal AUC ////
 if(run_type==5)
 {  
-   ofstream ll_file("output/ll.dat");
-   int n_pars=5;
-   _vbc_vec<float>params1(1,n_pars);
-   params1(1)=1.27; //according to gertzen 2011
-   params1(2)=1;
-   params1(3)=2;
-   params1(4)=0;  
-   params1(5)=0;
+   int n_pars=4;
+   _vbc_vec<float>params1(1,n_pars); 
+
+   // Read parameters values from file //
+   ifstream pred_pars;
+   pred_pars.open("output/pred_pars.tab");
+   for(int j=1;j<=n_pars;j++)
+      pred_pars >> params1(j);
+
+   pred_pars.close();
+   // -- //
+
+   d_par=params1(1);
+   e_par = 1;
+   c_par=params1(2);
+   gamma_par=params1(3);
+   glb_alpha=params1(4);
 
    calc_traf();
    calc_traf_mat();
-   write_traf_mat();
-   /*
-   _vbc_vec<float> dat1(1,n_pars);
+   //write_traf_mat();
 
-   for(int i=1;i<=30;i++)
+   //Sub-sample a holdout set from sampled lakes (pre-2010)
+   int n_sub_sampled = 100,choose_from=0;
+   _vbc_vec<int> index_2006_big(1,n_lakes);
+   for(int i = 1; i<=n_lakes;i++)
    {
-      params1(5) +=0.005;
-      for(int p=1;p<=n_pars;p++)
-         ll_file << params1(p) << "\t";
-      ll_file << MLE_l_hood(&params1, &dat1) << "\n";
-   }
-
-   ll_file.close();
-
-   /*
-   ofstream n_inv_file("output/n_inv_file.dat");
-   e_par=1;
-   d_par=1;
-   c_par=0;
-   glb_alpha=0.005;
-
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
-
-
-   for(int j=1;j<=80;j++)
-   {
-      e_par=e_par+0.05;
-
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
-
-      for(int i=1;i<=30;i++)
+      if( (lakes(i).last_abs==2006 || lakes(i).discovered == 2006) )
       {
-         sim_spread();
-
-         //Write cummulative_total invaded for that sim.
-         for(int t=from_year+1;t<=to_year;t++)
-            n_inv_file << state(t).n_inv << "\t";
-         n_inv_file << "\n";
-
-         ll_file<< e_par << "\t" << l_hood() << "\n";
-         cout << e_par << "\t"<< l_hood() << "\n";
+         choose_from += 1;
+         index_2006_big(choose_from)=i;
       }
    }
+   _vbc_vec<int> index_2006(1,choose_from);
+   for(int i = 1; i<=choose_from;i++)
+      index_2006(i)=index_2006_big(i);
 
-   n_inv_file.close();
-   ll_file.close();
-
-    // MLE at d=e=1,c=1.5 : glb_alpha=0.00081
    
-   e_par=0.25;
-   d_par=1;
-   c_par=1.5;
-   glb_alpha=0.005;
+   ofstream prop_holdout_file;
+   prop_holdout_file.open("output/holdout_sim_props.csv");
+   ofstream holdout_inv_file("output/holdout2006_data_status.csv");
 
-   /*
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
-      sim_spread();
-      sim_spread();
-      sim_spread();
-   cout << "Simming...\n";
-   for(int i=1;i<=10000;i++)
+   _vbc_vec<int> holdout_inv_status(1,n_sub_sampled);
+   _vbc_vec<int> indicies_holdout(1,n_sub_sampled);
+   _vbc_vec<int> tmp_discovered(1,n_sub_sampled);
+   _vbc_vec<int> tmp_last_abs(1,n_sub_sampled);
+
+   cout << "Total 2006 lakes to choose from " << choose_from << "\n";
+   for(int rep=1;rep<=50;rep++)
    {
-      sim_spread();
-      write_t();
-   }
-     
-   t_file.close();
-   */
+      indicies_holdout = sample_wo_replace(index_2006,n_sub_sampled);
 
+      //Record the year_discovered of holdoutset
+      for(int i = 1; i<=n_sub_sampled;i++)
+      {
+         if(lakes(indicies_holdout(i)).discovered == 2006)
+            holdout_inv_status(i) = 1;
+         else
+            holdout_inv_status(i) = 0;
+
+         //write year discovered 
+         if(i == n_sub_sampled)
+            holdout_inv_file << holdout_inv_status(i) << "\n";
+         else
+            holdout_inv_file << holdout_inv_status(i) << ",";
+
+
+         //save last_abs and discoved
+         tmp_discovered(i) = lakes(indicies_holdout(i)).discovered;
+         tmp_last_abs(i) = lakes(indicies_holdout(i)).last_abs;
+
+         //remove year discovered
+         lakes(indicies_holdout(i)).discovered = 0;
+         lakes(indicies_holdout(i)).last_abs = 0;
+      }   
+      
+      //SIM SPREAD
+      _vbc_vec<float> prop_holdout_invaded(1,n_sub_sampled);
+      for(int i=1;i<=n_sub_sampled;i++)
+         prop_holdout_invaded(i) = 0;
+      int n_sims=1000;
+      for(int s=1; s<= n_sims; s++)
+      {
+         sim_spread();
+         for(int i=1;i<=n_sub_sampled;i++)
+         {
+            if(t_vec(indicies_holdout(i)) <= 2006)
+               prop_holdout_invaded(i) += 1;
+            //cout << prop_holdout_invaded(i) << "\t";
+         }
+      }
+      //write prop inv
+      for(int i=1;i<=n_sub_sampled;i++)
+      {
+         prop_holdout_invaded(i) = prop_holdout_invaded(i)/n_sims;
+         if(i < n_sub_sampled)
+            prop_holdout_file << prop_holdout_invaded(i) << ",";
+         else
+            prop_holdout_file << prop_holdout_invaded(i) << "\n";
+
+         //reset last_abs and discoved
+         lakes(indicies_holdout(i)).discovered = tmp_discovered(i);
+         lakes(indicies_holdout(i)).last_abs = tmp_last_abs(i);
+      }
+   }
+   holdout_inv_file.close();
+   prop_holdout_file.close();
 }
 /// Predictions from Bootstapped MLE ////
 if(run_type==6)

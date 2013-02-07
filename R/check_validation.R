@@ -10,12 +10,12 @@ pr<-pr[,1:(ncol(pr)-1)]
 pr_sim<-as.matrix(pr_sim)
 pr_sim<-pr_sim[,1:(ncol(pr_sim)-1)]
 
-mean_pr<-apply(pr,2,mean)
+mean_pr<-apply(pr_sim,2,mean)
 ord<-order(mean_pr)
 
-plot(pr[1,ord],pch=20,ylim=c(0,1))
-for(i in 1:nrow(pr))
-   points(pr[i,ord],pch=20,col=i)
+plot(pr_sim[1,ord],pch=20,ylim=c(0,1))
+for(i in 1:nrow(pr_sim))
+   points(pr_sim[i,ord],pch=20,col=i)
 
 val_index<-as.matrix(read.csv('output/pred_p.tab',sep='\t',header=FALSE))
 val_index<-as.integer(val_index[1,1:(ncol(val_index)-1)])

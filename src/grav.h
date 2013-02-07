@@ -133,6 +133,7 @@ float prior_MD(_vbc_vec<float>,int);
 bool restrict_MCMC_MD(_vbc_vec<float>);
 _vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>,int); //pars,indicies
 _vbc_vec<int> sample_w_replace(_vbc_vec<int>);
+_vbc_vec<int> sample_wo_replace(_vbc_vec<int>,int);
 
 #endif;
 
@@ -624,9 +625,9 @@ void sim_spread()
         }
         if(t<to_year)
             update_sim_pp(t);
-      cout << state(t).n_inv << " ";
+      //cout << state(t).n_inv << " ";
     }
-   cout << "\n";
+   //cout << "\n";
 }
 void update_sim_pp(int t)
 {
@@ -1082,6 +1083,23 @@ _vbc_vec<int> sample_w_replace(_vbc_vec<int> vec)
       s_vec(i) = vec(tmp_index);
    }
 
+   return(s_vec);
+}
+// Sample an integer vector without replacement.
+_vbc_vec<int> sample_wo_replace(_vbc_vec<int> vec,int n)
+{
+   int tmp_index,tmp;
+   _vbc_vec<int> s_vec(1,n);
+   //cout<< "In sample_wo_replace XX\n";
+   for(int i=1;i<=n;i++)
+   {
+      tmp_index = (int) runif(1,vec.UBound() + 2 - i);
+      tmp = vec(tmp_index);
+      vec(tmp_index) = vec(vec.UBound() + 1 - i);
+      vec(vec.UBound() + 1 - i) = tmp;
+      s_vec(i)=tmp;
+   }
+   //cout<< "In sample_wo_replace YY\n";
    return(s_vec);
 }
 
