@@ -473,7 +473,6 @@ if(run_type==5)
          {
             if(t_vec(indicies_holdout(i)) <= 2006)
                prop_holdout_invaded(i) += 1;
-            //cout << prop_holdout_invaded(i) << "\t";
          }
       }
       //write prop inv

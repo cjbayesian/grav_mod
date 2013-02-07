@@ -30,7 +30,7 @@ for(i in 1:length(pred[,1]))
    obs_tot[i]<-sum(tmp_d)
 }
 
-
+x11()
 hist(auc_vals,breaks=20,xlim=c(0,1))
 
 x11()
