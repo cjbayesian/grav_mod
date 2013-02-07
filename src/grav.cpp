@@ -37,14 +37,14 @@ int main(int argc,char *argv[])
     init_state();
     init_t(); 
     calc_state();
-    calc_traf();
-    calc_traf_mat();
-    calc_pp(); //!!
 
 
    ofstream ll_("output/ll_test.dat");
    if(FALSE)
    {
+      calc_traf();
+      calc_traf_mat();
+      calc_pp(); //!!
       int tmp_t;
        for(int lake=1;lake<=n_lakes;lake++)
        {
@@ -501,7 +501,7 @@ if(run_type==6)
 
    _vbc_vec<float> preds;
    preds = predict_p(params1,val_lakes_index,m_pars); //pars,indicies of validation set
-
+   write_traf_mat();
    // Write predictions to file //
    ofstream pred_p_file;
    pred_p_file.open("output/pred_p.tab");

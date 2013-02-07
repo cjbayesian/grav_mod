@@ -34,7 +34,7 @@ using namespace mcmcMD;
     bool gridded=TRUE;
     bool boot=TRUE;
     float d_par=2; //0.288344;   //to be fit
-    float e_par=0.8;        //to be fit
+    float e_par=1;        //to be fit
     float c_par=1;          //to be fit
     float gamma_par=0;      //to be fit
     float glb_alpha=0.00001;          //to be fit (as a function of chem_vars)
@@ -411,7 +411,7 @@ float grav_func(int i, int k)
 }
 void calc_traf()
 {
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int i=1;i<=n_sources;i++)
     {
         sources(i).Ai=0;
@@ -422,7 +422,7 @@ void calc_traf()
         }
         for(int j=1;j<=n_lakes;j++)
         {
-            sources(i).Gij(j) = sources(i).Gij(j) / sources(i).Ai;
+            sources(i).Gij(j) = sources(i).Gij(j) / (sources(i).Ai);
             if(std::isnan(sources(i).Gij(j)))
                 sources(i).Gij(j) = 0;
         }
@@ -433,19 +433,21 @@ void calc_traf_mat()
    //This is the bottleneck of the whole program.
    //(n_lakes*n_lakes - n_lakes)/2 * n_sources 
    // ~ 460million calcs every call.
-
-    #pragma omp parallel for
+   
+   cout << "Calculating traf mat...\n";
+   //#pragma omp parallel for
     for(int i=1;i<=n_lakes;i++)
     {
         for(int j=1;j<=i-1;j++) //start at 0 since the diagonal of traf_mat is not needed.
         {
-            traf_mat(i,j)=0;
+            traf_mat(i,j)=0;            
             for(int s=1;s<=n_sources;s++)
                 traf_mat(i,j)+=sources(s).Gij(i)*sources(s).Gij(j)*sources(s).Oi;
 
             traf_mat(j,i)=traf_mat(i,j);
         }
     }
+   cout << "Finished calculating traf mat...\n";
 }
 
 // *************************************************
@@ -926,8 +928,38 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       calc_traf_mat();
       calc_pp();
 
-      for(int i=1;i<=50;i++)
+
+      // -- Using the simulation method -- //
+      // prob of inv is calculated as the proportion of times invaded via simulation // 
+      _vbc_vec<float> prop_val_invaded(1,n_val_lakes);
+      for(int i=1;i<=n_val_lakes;i++)
+         prop_val_invaded(i) = 0;
+
+      int n_sims = 1000;
+      for(int s=1;s<=n_sims;s++)
+      {
          sim_spread();
+         for(int i=1;i<=n_val_lakes;i++)
+         {
+            if(t_vec(indicies(i))<2011 && t_vec(indicies(i)) != 0)
+               prop_val_invaded(i) += 1;
+            cout << prop_val_invaded(i) << "\t";
+         }
+         cout << "\n";
+      }
+      
+      ofstream val_sim_file;
+      val_sim_file.open("output/val_sim_props.tab", ios::app);
+      
+      for(int i=1;i<=n_val_lakes;i++)
+      {
+            prop_val_invaded(i) = prop_val_invaded(i)/n_sims;
+            val_sim_file << prop_val_invaded(i) << "\t";
+      }
+      val_sim_file << "\n";
+      val_sim_file.close();
+      // --------------------------------------------- //
+
 
       calc_pp_validation(indicies); // fill in all pp values for validation lakes
                                     // since calc_pp() is optimized to only calc pp for uninvaded lakes.
