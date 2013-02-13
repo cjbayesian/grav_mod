@@ -10,16 +10,22 @@ pr<-pr[,1:(ncol(pr)-1)]
 pr_sim<-as.matrix(pr_sim)
 pr_sim<-pr_sim[,1:(ncol(pr_sim)-1)]
 
-mean_pr<-apply(pr_sim,2,mean)
+mean_pr<-apply(pr,2,mean)
 ord<-order(mean_pr)
 
-plot(pr_sim[1,ord],pch=20,ylim=c(0,1))
+plot(pr[1,ord],pch=20,ylim=c(0,1))
+for(i in 1:nrow(pr))
+   points(pr[i,ord],pch=20,col=i)
+
+
 for(i in 1:nrow(pr_sim))
-   points(pr_sim[i,ord],pch=20,col=i)
+   points(pr_sim[i,ord],pch=20,col=i+2)
+
+
 
 val_index<-as.matrix(read.csv('output/pred_p.tab',sep='\t',header=FALSE))
 val_index<-as.integer(val_index[1,1:(ncol(val_index)-1)])
-points(lakes[val_index[ord],4],pch=3)
+points(lakes[val_index[ord],7]-1,pch=3)
 
 x11()
 ## -- ##
@@ -40,5 +46,6 @@ for(i in 1:nrow(pr))
 #source('~/AUC/AUC.R')
 source('~/SchoolBackUp/AUC/AUC.R')
 x11()
-AUC(d=lakes[val_index,4],pred=pr[1,],plot=TRUE)
+d= lakes[val_index,7]==2
+AUC(d=d,pred=pr[1,],plot=TRUE)
 

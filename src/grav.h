@@ -68,6 +68,7 @@ class clsLake
       bool val_invaded;
       int discovered;
       int last_abs;
+      int status_2010;
       _vbc_vec<float> chem;
 		_vbc_vec<float> Uij;
 		_vbc_vec<float> Qjt;
@@ -279,7 +280,7 @@ void read_data()
     if(sim)
         l_file.open("sims/simmed_lakes.csv");
     else    
-        l_file.open("../2010_bytho_data/lakes_processed_erin_fix.csv");//  lakes_processed.csv");
+        l_file.open("../2010_bytho_data/lakes_processed.csv"); //lakes_processed_erin_fix.csv");
     /* File structure:
     "Hectares",
     "UTM_X",
@@ -287,6 +288,7 @@ void read_data()
     "invaded",
     "B_DISC_YEAR",
     "LAST_ABS",
+    "status_2010",
     "NAUT",
     "KKUT",
     "MGUT",
@@ -318,9 +320,11 @@ void read_data()
         l_file >> lakes(i).invaded;
         l_file >> lakes(i).discovered;
         l_file >> lakes(i).last_abs;
+        l_file >> lakes(i).status_2010;
 
         // Catch for to_year < 2010.
         // modify lakes(i) to reflect missing information.
+        /*
          lakes(i).val_invaded=0;
          if(lakes(i).discovered > 2009)
          {
@@ -339,8 +343,18 @@ void read_data()
             tmp_val_lakes_index(n_validation)=i;
          }
 
-
-
+         */
+        // Count validation lakes //
+        if(lakes(i).status_2010 != 0)
+        { 
+           n_validation++;
+           tmp_val_lakes_index(n_validation)=i;
+           if(lakes(i).status_2010 == 2)
+           {
+              n_invaded_in_validation_set++;
+              tmp_val_inv_lakes_index(n_invaded_in_validation_set)=i;
+           }
+        }
         if( (lakes(i).discovered != 0 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s) and validation lakes)
         {
             n_sampled++;
@@ -942,7 +956,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
          sim_spread();
          for(int i=1;i<=n_val_lakes;i++)
          {
-            if(t_vec(indicies(i)) != 0)
+            if(t_vec(indicies(i)) != to_year+1)
                prop_val_invaded(i) += 1;
             cout << prop_val_invaded(i) << "\t";
          }
@@ -954,7 +968,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       
       for(int i=1;i<=n_val_lakes;i++)
       {
-            prop_val_invaded(i) = prop_val_invaded(i)/n_sims;
+            prop_val_invaded(i) = float(prop_val_invaded(i))/float(n_sims);
             val_sim_file << prop_val_invaded(i) << "\t";
       }
       val_sim_file << "\n";

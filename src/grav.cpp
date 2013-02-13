@@ -198,7 +198,7 @@ if(run_type==1)
 
          simplex::clsSimplex<float> gertzen_rep;
          //gertzen_rep.set_param_small(1e-3);
-         gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-1);
+         gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
          gertzen_rep.getParams(&MLE_params);
 
          cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
@@ -211,7 +211,7 @@ if(run_type==1)
    }else{
       simplex::clsSimplex<float> gertzen_rep;
       //gertzen_rep.set_param_small(1e-3);
-      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-1);
+      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
       gertzen_rep.getParams(&MLE_params);
 
       cout << "\n\nMLE\n";
