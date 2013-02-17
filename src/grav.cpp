@@ -282,14 +282,14 @@ if(run_type==2)
       _vbc_vec<float> prop_width(1,4,1,4);
       prop_width(1)=0.05;
       prop_width(2)=0.05;
-      prop_width(3)=0.05;
-      prop_width(4)=0.000001;
+      prop_width(3)=0.000001;
+      prop_width(4)=0.00001;
 
 
-      params(1)=1;
-      params(2)=1;
-      params(3)=2;   
-      params(4)=0.0001;         
+      params(1)=1.27;
+      params(2)=1.48;
+      params(3)=0.0000489;
+      params(4)=0.00105;      
 
       _vbc_vec<float> prop_sigma;
       prop_sigma = diag(prop_width);

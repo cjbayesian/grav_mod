@@ -803,8 +803,10 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    _vbc_vec<float> params = *pars;
    float llmd;
    d_par=params(1);
-   e_par= params(2);
-   c_par=params(3);
+   //e_par= params(2);
+   c_par=params(2);
+   gamma_par=params(3);
+   
 
    if(no_env)
       glb_alpha=params(4);
