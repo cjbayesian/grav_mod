@@ -38,6 +38,12 @@ int main(int argc,char *argv[])
     init_t(); 
     calc_state();
 
+   if(fixed_d != 0) //run traf_mat once and only once (for faster prototyping)
+   {
+      calc_traf();
+      calc_traf_mat();
+      calc_pp();
+   }
 
    ofstream ll_("output/ll_test.dat");
    if(FALSE)
@@ -168,19 +174,54 @@ if(run_type==1)
    // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
    float garbage=l_hood();
    int n_reps = 100;
-   int n_pars=4; //no e (area exponent)
-   _vbc_vec<float>params1(1,n_pars);
-   params1(1)=1.27;
-   params1(2)=1.48;
-   params1(3)=0.0000489;
-   params1(4)=0.00105;  
-   _vbc_vec<float> dat1(1,n_pars);
-   _vbc_vec<float> MLE_params(1,n_pars);
+
+   ofstream par_file;
+
+   int n_pars; //13 env + intercept + d,c,gamma
+   _vbc_vec<float> params1;
+   _vbc_vec<float> dat1;
+   _vbc_vec<float> MLE_params;
+   if(no_env)
+   {
+      par_file.open("output/pred_pars.tab");
+      n_pars=4;  // d,c,gamma,alpha
+      params1.redim(1,n_pars);
+      dat1.redim(1,n_pars);
+      MLE_params.redim(1,n_pars);
+      params1(1)=1.27;
+      params1(2)=1.48;
+      params1(3)=0.0000489;
+      params1(4)=0.00105;  
+   }else{
+      par_file.open("output/pred_parsENV.tab");
+      n_pars=17; //13 env + intercept + d,c,gamma
+      params1.redim(1,n_pars);
+      dat1.redim(1,n_pars);
+      MLE_params.redim(1,n_pars);
+      params1(1)=1.27;
+      params1(2)=1.48;
+      params1(3)=0.0000489;   
+
+      /// SEEDS ///
+      params1(4)=-8;
+      params1(5)=0.01;
+      params1(6)=-0.1; //-2:1 MLE ~0
+      params1(7)=0.1; //-1.5:1.5 MLE ~0
+      params1(8)=0.1; //-0.4:0.2 MLE ~0
+      params1(9)=0.05; //0:0.1 MLE 0.05    ***
+      params1(10)=1.3; //-0.4:0.2 MLE ~1.3  **** 
+      params1(11)=-0.31; //-0.7:0.1 MLE ~-0.31 ****
+      params1(12)=-0.01; //-0.4:0.2 MLE ~-0.01 **
+      params1(13)=0.06; //-0.1:0.1 MLE ~0.06 *
+      params1(14)=0.01; //-0.16:0.1 MLE ~0
+      params1(15)=0.1; //-0.2:0.2 MLE ~0
+      params1(16)=-0.01; //-0.04:0.01 MLE ~0
+      params1(17)=0.1; //-0.3:0.3 MLE ~0.1
+   }
 
    _vbc_vec<int> tmp_index_sampled;
    tmp_index_sampled = sampled_index;
-   ofstream par_file;
-   par_file.open("output/pred_pars.tab");
+
 
    if(boot)
    {

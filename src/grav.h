@@ -45,6 +45,7 @@ using namespace mcmcMD;
     int from_year=1989;
     int to_year=2009;
     int n_sampled=0;
+    float fixed_d=0;
     _vbc_vec<float> d_matrix(1,n_sources,1,n_lakes);
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit
     _vbc_vec<float> traf_mat(1,n_lakes,1,n_lakes);
@@ -212,8 +213,12 @@ void inits()
    init_file >> n_sources;
    init_file >> tmp;
    init_file >> boot;
+   init_file >> tmp;
+   init_file >> fixed_d;
 
    init_file.close();
+   if(fixed_d != 0)
+      d_par = fixed_d;
 
    d_matrix.redim(1,n_sources,1,n_lakes);
    sources.redim(1,n_sources);
@@ -759,7 +764,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    if(!no_env)
    {
       for(int i=1;i<=n_chem_var+1;i++)
-         chem_pars(i)=params(4+i);
+         chem_pars(i)=params(3+i);
    }
    else
       glb_alpha=params(4);
@@ -768,10 +773,15 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    if(d_par <=0 || e_par < 0 || c_par < 0 || gamma_par < 0 || glb_alpha < 0 )
       return(10000000);
 
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
-
+   if(fixed_d == 0)
+   {
+      calc_traf();
+      calc_traf_mat();
+      calc_pp();
+   }else{
+      //*pars(1)=fixed_d;
+      d_par=fixed_d;
+   }
    sim_spread();
 
    for(int i=1;i<=n_sim_for_smooth;i++)
@@ -941,9 +951,20 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       c_par=params(m,2);
       gamma_par=params(m,3);
       glb_alpha=params(m,4);
-      calc_traf();
-      calc_traf_mat();
-      calc_pp();
+      if(fixed_d == 0) //only calc traf_mat if d is fit.
+      {
+         calc_traf();
+         calc_traf_mat();
+         calc_pp();
+      }else{
+         d_par=fixed_d;
+      }
+
+      if(!no_env)
+      {
+         for(int i=1;i<=n_chem_var+1;i++)
+            chem_pars(i)=params(m,3+i);
+      }
 
 
       // -- Using the simulation method -- //
