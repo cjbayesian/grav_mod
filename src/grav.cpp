@@ -536,16 +536,34 @@ if(run_type==5)
 /// Predictions from Bootstapped MLE ////
 if(run_type==6)
 {  
-   //m reps of the bootstrap/posterior
-   int m_pars = wc_l("output/pred_pars.tab");
-   int n_pars = 4;
-   cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
 
-   _vbc_vec<float>params1(1,m_pars,1,n_pars);
-
-   // Read parameters values from file //
+   int m_pars, n_pars;
+   _vbc_vec<float> params1;
    ifstream pred_pars;
-   pred_pars.open("output/pred_pars.tab");
+   if(no_env)
+   {
+      //m reps of the bootstrap/posterior
+      m_pars = wc_l("output/pred_pars.tab");
+      n_pars = 4;
+      cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
+
+      params1.redim(1,m_pars,1,n_pars);
+
+      // Read parameters values from file //
+      pred_pars.open("output/pred_pars.tab");
+
+   }else{
+      //m reps of the bootstrap/posterior
+      m_pars = wc_l("output/pred_parsENV.tab");
+      n_pars=17; //13 env + intercept + d,c,gamma
+      cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
+
+      params1.redim(1,m_pars,1,n_pars);
+
+      // Read parameters values from file //
+      pred_pars.open("output/pred_parsENV.tab");
+   
+   }
 
    for(int i=1;i<=m_pars;i++)
    {

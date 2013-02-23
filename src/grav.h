@@ -941,7 +941,8 @@ void sim_spread_posterior()
 _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pars) //pars,indicies
 {
    _vbc_vec<float> pred_p(1,m_pars,1,n_val_lakes);
-
+   ofstream val_sim_file;
+   val_sim_file.open("output/val_sim_props.tab");
    for(int m=1;m<=m_pars;m++)
    {
       cout << m << " of " << m_pars << "\n";
@@ -986,16 +987,12 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
          cout << "\n";
       }
       
-      ofstream val_sim_file;
-      val_sim_file.open("output/val_sim_props.tab", ios::app);
-      
       for(int i=1;i<=n_val_lakes;i++)
       {
             prop_val_invaded(i) = float(prop_val_invaded(i))/float(n_sims);
             val_sim_file << prop_val_invaded(i) << "\t";
       }
       val_sim_file << "\n";
-      val_sim_file.close();
       // --------------------------------------------- //
 
 
@@ -1005,7 +1002,8 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       int cal_from;
       for(int i=1;i<=n_val_lakes;i++)
       {
-         // 1 - prob of remaining uninvaded during the period since last observed absence
+         float alpha=calc_alpha(indicies(i)); //insert this inside lake loop.
+         // 1 - prob of remaining uninvaded during the period since last observed absence //
          if(lakes(indicies(i)).last_abs != 0)
             cal_from = lakes(indicies(i)).last_abs;
          else
@@ -1013,11 +1011,12 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
    
          float log_p_uninv = 0;
          for(int t=cal_from+1;t<=2010;t++)
-            log_p_uninv += -pow(glb_alpha*lakes(indicies(i)).pp(t)+gamma_par,c_par);
+            log_p_uninv += -pow(alpha*lakes(indicies(i)).pp(t)+gamma_par,c_par);
 
           pred_p(m,i) = 1 - exp(log_p_uninv);
       }
    }
+   val_sim_file.close();
    return(pred_p);
 }
 

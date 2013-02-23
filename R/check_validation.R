@@ -10,14 +10,15 @@ pr<-pr[,1:(ncol(pr)-1)]
 pr_sim<-as.matrix(pr_sim)
 pr_sim<-pr_sim[,1:(ncol(pr_sim)-1)]
 
-mean_pr<-apply(pr,2,mean)
+mean_pr<-apply(pr_sim,2,mean)
 ord<-order(mean_pr)
 
 plot(pr[1,ord],pch=20,ylim=c(0,1))
 for(i in 1:nrow(pr))
    points(pr[i,ord],pch=20,col=i)
 
-
+x11()
+plot(pr_sim[1,ord],pch=20,ylim=c(0,1),main='sim')
 for(i in 1:nrow(pr_sim))
    points(pr_sim[i,ord],pch=15,col=i+2)
 
@@ -54,10 +55,16 @@ for(i in 1:nrow(pr_sim))
    sim_auc[i]<-AUC(d=d,pred=pr_sim[i,],plot=TRUE,add=TRUE)$auc
 
 
+x11()
+## AUC distributions ##
+hist(cal_auc,breaks=30,xlim=c(0.5,1))
+hist(sim_auc,breaks=30,col='lightgrey',add=TRUE)
+
 cal_rates<-apply(pr,1,sum)
 sim_rates<-apply(pr_sim,1,sum)
 actual_rate<-sum(d)
 
+x11()
 hist(cal_rates,breaks=30,xlim=c(0,25))
 hist(sim_rates,breaks=30,add=TRUE,col='lightgrey')
 abline(v=actual_rate,lwd=3,lty=2,col='blue')
@@ -66,7 +73,7 @@ abline(v=actual_rate,lwd=3,lty=2,col='blue')
 ########## New Metric ##############
 source('~/AUC/bs.R')
 source('~/AUC/ripley_style2.R')
-
+x11()
 rip_style2(d,pr,plot_met=TRUE)
 x11()
 rip_style2(d,pr_sim,plot_met=TRUE)
