@@ -28,7 +28,7 @@ int main(int argc,char *argv[])
    if(run_type==6)
       to_year=2010;
 
-    // Read in Data //
+    // Read in Data // 
     cout<< "Reading Data\n";
     read_data();
 
