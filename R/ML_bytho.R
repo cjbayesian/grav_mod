@@ -51,5 +51,5 @@ AUC(d=val_actual,pred=pred[,2],plot=TRUE,main='2010')
 print(sum(pred[,2]))
 
 cbvm(d=val_actual,pred=pred[,2])
-
+   
 #####################################################################
