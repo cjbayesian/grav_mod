@@ -173,7 +173,7 @@ if(run_type==1)
    // to smooth out stochastic surface.
    // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
    float garbage=l_hood();
-   int n_reps = 100;
+   int n_reps = 1000;
 
    ofstream par_file;
 
@@ -564,7 +564,7 @@ if(run_type==6)
       pred_pars.open("output/pred_parsENV.tab");
    
    }
-
+    // read in predicted parameters from bootstrap or Bayesian
    for(int i=1;i<=m_pars;i++)
    {
       for(int j=1;j<=n_pars;j++)

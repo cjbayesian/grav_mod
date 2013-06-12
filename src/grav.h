@@ -356,6 +356,7 @@ void read_data()
            tmp_val_lakes_index(n_validation)=i;
            if(lakes(i).status_2010 == 2)
            {
+              lakes(i).val_invaded = 1;
               n_invaded_in_validation_set++;
               tmp_val_inv_lakes_index(n_invaded_in_validation_set)=i;
            }
