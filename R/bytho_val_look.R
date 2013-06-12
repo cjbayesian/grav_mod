@@ -12,7 +12,7 @@ library(rvmapp)
 
 p_hat<-read.table('output/val_sim_props.tab')
 o<-read.table('output/val_lakes.dat')
-
+o<-o[,1]
 v<-vmapp(pred=p_hat,d=o)
 
 plot(t(p_hat[1,]),t(v$delta[1,]),ylim=c(-0.5,0.5),xlim=c(0,1))
@@ -30,7 +30,7 @@ source('~/SchoolBackUp/AUC/AUC.R')
 #source('~/AUC/AUC.R')
 aucs<-numeric(nrow(p_hat))
 for(i in 1:nrow(p_hat))
-    aucs[i]<-AUC(o,p_hat[i,],plot=T,add=T)$auc
+    aucs[i]<-AUC(o,p_hat[i,])$auc
 
 hist(aucs,breaks=20,xlim=c(0.5,1))
  
