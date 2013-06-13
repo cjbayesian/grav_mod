@@ -27,9 +27,9 @@ for(i in 2:195)
 abline(h=0)
 
 ## p-hat vs p (estimated)
-plot(t(p_hat[1,]),t(v$delta[1,])+p_hat[1,],ylim=c(0,1),xlim=c(0,1))
+plot(t(p_hat[1,]),t(p_hat[1,]-v$delta[1,]),ylim=c(0,1),xlim=c(0,1))
 for(i in 2:195)
-    points(t(p_hat[i,]),t(v$delta[i,])+p_hat[i,])
+    points(t(p_hat[i,]),t(p_hat[i,]-v$delta[i,]))
 abline(0,1)
 ##
 
@@ -48,7 +48,7 @@ v<-vmapp(pred=p_hat,d=o)
 
 par(mfrow=c(1,2))
 mean_delta<-apply(v$delta,2,mean)
-plot(p_hat[1,],mean_delta+p_hat[1,],ylim=c(0,1),xlim=c(0,1))
+plot(p_hat[1,],p_hat[1,]-mean_delta,ylim=c(0,1),xlim=c(0,1))
 abline(0,1,lty=2)
 
 ## if delta is outside of what is possible, replace by cutoffs
@@ -57,11 +57,11 @@ abline(0,1,lty=2)
 
 mean_delta<-apply(v$delta,2,mean)
 mean_p_hat<-apply(p_hat,2,mean)
-plot(mean_p_hat,mean_delta+mean_p_hat,ylim=c(0,1),xlim=c(0,1))
+plot(mean_p_hat,mean_p_hat-mean_delta,ylim=c(0,1),xlim=c(0,1))
 abline(0,1,lty=2)
 
 for(i in 1:1000)
-    points(p_hat[i,],v$delta[i,]+p_hat[i,],col=rgb(0,0,1,0.01),pch=20)
+    points(p_hat[i,],p_hat[i,]-v$delta[i,],col=rgb(0,0,1,0.01),pch=20)
 #########################################
 
 
