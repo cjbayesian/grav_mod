@@ -5,13 +5,13 @@ library(maptools)
 
 ## Read in lake data
 lakes<-read.table("../2010_bytho_data/lakes_processed.csv")
+lakes<-read.table("sims/simmed_lakes.csv")
 
 ## Read in 2EB ws boundary
 ws<-readShapePoly('../lakepolygons/2EB Boundary/Dissolved_Boundary')
 
 ## Custom legend
 source('R/cust_colorlegend.R')
-
 
     index_val_lakes <- which(lakes[,7]!=0)
     index_val_lakes_abs <- which(lakes[,7]==1)
@@ -30,9 +30,11 @@ if(F)
 
 ## Predictions ###
 p_hat<-as.matrix(read.table('output/val_sim_props.tab'))
+p_hat<-as.matrix(read.table('sims/gb_output/val_sim_props.tab'))
 
 ## Observed (validation)
 o<-read.table('output/val_lakes.dat')
+o<-read.table('sims/gb_output/val_lakes.dat')
 o<-o[,1]
 
 ## For plotting with colorRampPalettes

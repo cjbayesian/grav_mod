@@ -172,9 +172,9 @@ if(run_type==1)
    // need a likelihood function wrapper to call l_hood() multiple times and average the result
    // to smooth out stochastic surface.
    // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
+
    float garbage=l_hood();
    int n_reps = 1000;
-
    ofstream par_file;
 
    int n_pars; //13 env + intercept + d,c,gamma
@@ -183,7 +183,10 @@ if(run_type==1)
    _vbc_vec<float> MLE_params;
    if(no_env)
    {
-      par_file.open("output/pred_pars.tab");
+      if(sim)
+        par_file.open("sims/gb_output/pred_pars.tab");
+      else
+        par_file.open("output/pred_pars.tab");    
       n_pars=4;  // d,c,gamma,alpha
       params1.redim(1,n_pars);
       dat1.redim(1,n_pars);
@@ -193,7 +196,10 @@ if(run_type==1)
       params1(3)=0.0000489;
       params1(4)=0.00105;  
    }else{
-      par_file.open("output/pred_parsENV.tab");
+      if(sim)        
+          par_file.open("sims/gb_output/pred_parsENV.tab");
+      else
+          par_file.open("output/pred_parsENV.tab");
       n_pars=17; //13 env + intercept + d,c,gamma
       params1.redim(1,n_pars);
       dat1.redim(1,n_pars);
@@ -226,7 +232,10 @@ if(run_type==1)
    if(boot)
    {
       ofstream boot_file;
-      boot_file.open("output/boot_lakes.tab");
+      if(sim)
+          boot_file.open("sims/gb_output/boot_lakes.tab");
+      else
+          boot_file.open("output/boot_lakes.tab");    
       for(int i=1;i<=n_reps;i++)
       {
          //Bootstrap resample //
@@ -431,7 +440,10 @@ if(run_type==5)
 
    // Read parameters values from file //
    ifstream pred_pars;
-   pred_pars.open("output/pred_pars.tab");
+   if(sim)
+       pred_pars.open("sims/gb_output/pred_pars.tab");
+   else
+       pred_pars.open("output/pred_pars.tab");
    for(int j=1;j<=n_pars;j++)
       pred_pars >> params1(j);
 
@@ -543,26 +555,37 @@ if(run_type==6)
    if(no_env)
    {
       //m reps of the bootstrap/posterior
-      m_pars = wc_l("output/pred_pars.tab");
+      if(sim)
+        m_pars = wc_l("sims/gb_output/pred_pars.tab");
+      else
+        m_pars = wc_l("output/pred_pars.tab");    
       n_pars = 4;
       cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
 
       params1.redim(1,m_pars,1,n_pars);
 
       // Read parameters values from file //
-      pred_pars.open("output/pred_pars.tab");
+      if(sim)
+          pred_pars.open("sims/gb_output/pred_pars.tab");
+      else
+          pred_pars.open("output/pred_pars.tab");
 
    }else{
       //m reps of the bootstrap/posterior
-      m_pars = wc_l("output/pred_parsENV.tab");
+      if(sim)
+          m_pars = wc_l("sims/gb_output/pred_parsENV.tab");
+      else
+          m_pars = wc_l("output/pred_parsENV.tab");
       n_pars=17; //13 env + intercept + d,c,gamma
       cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
 
       params1.redim(1,m_pars,1,n_pars);
 
       // Read parameters values from file //
-      pred_pars.open("output/pred_parsENV.tab");
-   
+      if(sim)
+          pred_pars.open("sims/gb_output/pred_parsENV.tab");
+      else
+          pred_pars.open("output/pred_parsENV.tab");
    }
     // read in predicted parameters from bootstrap or Bayesian
    for(int i=1;i<=m_pars;i++)
@@ -583,7 +606,10 @@ if(run_type==6)
    write_traf_mat();
    // Write predictions to file //
    ofstream pred_p_file;
-   pred_p_file.open("output/pred_p.tab");
+   if(sim)
+       pred_p_file.open("sims/gb_output/pred_p.tab");
+   else
+       pred_p_file.open("output/pred_p.tab");
    cout << "---------------- " << "\n";
    for(int i=1;i<=n_val_lakes;i++)
       pred_p_file << val_lakes_index(i) << "\t";
@@ -599,7 +625,10 @@ if(run_type==6)
 
    // Write Validation lakes outcomes to file //
    ofstream val_d_file;
-   val_d_file.open("output/val_lakes.dat");
+   if(sim)
+       val_d_file.open("sims/gb_output/val_lakes.dat");
+   else
+       val_d_file.open("output/val_lakes.dat");
    for(int i=1;i<=n_val_lakes;i++)
       val_d_file << lakes(val_lakes_index(i)).val_invaded << "\n";
    val_d_file.close();

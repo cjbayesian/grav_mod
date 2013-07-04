@@ -194,10 +194,20 @@ error_sd<-0.75
 is_validation <- last_obs_uninv == 2010 | first_obs_inv == 2010
 validation_index <- which(is_validation)
 
+val_col <- rep(0,n_lakes)
+val_col[is_validation] <- 1
+val_col[is_validation & first_obs_inv] <- 2
+
+
+
 
 #### Wrap up lakes info and write to file ####
-    write_lakes<-data.frame(signif(lakes$area,4),lakes$x,lakes$y,invaded,first_obs_inv,last_obs_uninv)
+    write_lakes<-data.frame(signif(lakes$area,4),lakes$x,lakes$y,invaded,first_obs_inv,last_obs_uninv,val_col)
     write_lakes<-cbind(write_lakes,signif(chem,3))
+
+    write_lakes[write_lakes[,5]==2010,4] <- 0
+    write_lakes[write_lakes[,6]==2010,6] <- 0
+    write_lakes[write_lakes[,5]==2010,5] <- 0
 
     write.table(write_lakes,file='simmed_lakes.csv',col.names=FALSE,row.names=FALSE,sep='\t')
 

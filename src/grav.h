@@ -46,10 +46,10 @@ using namespace mcmcMD;
     int to_year=2009;
     int n_sampled=0;
     float fixed_d=0;
-    _vbc_vec<float> d_matrix(1,n_sources,1,n_lakes);
+    _vbc_vec<float> d_matrix;
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit
-    _vbc_vec<float> traf_mat(1,n_lakes,1,n_lakes);
-    _vbc_vec<int> t_vec(1,n_lakes);
+    _vbc_vec<float> traf_mat;
+    _vbc_vec<int> t_vec;
     _vbc_vec<int> sampled_index;
     _vbc_vec<int> val_lakes_index(1,n_val_lakes);
     _vbc_vec<int> val_lakes_inv_index(1,n_lakes);
@@ -215,13 +215,13 @@ void inits()
    init_file >> boot;
    init_file >> tmp;
    init_file >> fixed_d;
+   init_file >> tmp;
+   init_file >> sim;
 
    init_file.close();
    if(fixed_d != 0)
       d_par = fixed_d;
 
-   d_matrix.redim(1,n_sources,1,n_lakes);
-   sources.redim(1,n_sources);
 }
 
 
@@ -238,54 +238,16 @@ void get_gen_pars()
 }
 void read_data()
 {
-    // Distance matrix //
-    ifstream d_file;
-    if(sim)
-        d_file.open("sims/distance_matrix.csv"); //distance_matrix.csv        
-    else
-   {
-      if(gridded)
-        d_file.open("../2010_bytho_data/distance_matrix_grd.csv"); //distance_matrix.csv
-      else
-         d_file.open("../2010_bytho_data/cj_roadconn.tab"); //distance_matrix.csv
-   }
-    for(int i = 1;i<=n_sources;i++)
-	{
-        sources(i).Dij.redim(1,n_lakes);
-        sources(i).Gij.redim(1,n_lakes);
-        sources(i).Xit.redim(from_year-1,to_year);
-        sources(i).Xit(from_year-1)=0;
-        for(int j = 1;j<=n_lakes;j++)
-        {
-            d_file >> sources(i).Dij(j);
-        }
-    }
-    d_file.close();
-
-    // Oi //
-    ifstream o_file;
-    if(sim)
-        o_file.open("sims/Oi.csv");        
-    else
-    {
-         if(gridded)
-            o_file.open("../2010_bytho_data/Oi_grd.csv"); //gridded 
-         else
-            o_file.open("../2010_bytho_data/Oi.csv"); // (non-gridded)
-    }
-    for(int i = 1;i<=n_sources;i++)
-	{
-         o_file >> sources(i).Oi;
-         sources(i).Oi=sources(i).Oi;     
-    }
-    o_file.close();
-
     // Lakes and chemistry //
     ifstream l_file;
-    if(sim)
+    if(sim){
         l_file.open("sims/simmed_lakes.csv");
-    else    
+        n_lakes = wc_l("sims/simmed_lakes.csv");
+    }
+    else{    
         l_file.open("../2010_bytho_data/lakes_processed.csv"); //lakes_processed_erin_fix.csv");
+        n_lakes = wc_l("../2010_bytho_data/lakes_processed.csv");
+    }
     /* File structure:
     "Hectares",
     "UTM_X",
@@ -308,7 +270,8 @@ void read_data()
     "COND25",
     "SECCHI.DEPTH"
     */
-
+    traf_mat.redim(1,n_lakes,1,n_lakes);
+    t_vec.redim(1,n_lakes);
     _vbc_vec<int> tmp_index_sampled(1,n_lakes);
     _vbc_vec<int> tmp_val_lakes_index(1,n_lakes);    
     _vbc_vec<int> tmp_val_inv_lakes_index(1,n_lakes); 
@@ -387,6 +350,58 @@ void read_data()
       val_lakes_inv_index(i)=tmp_val_inv_lakes_index(i);
 
     l_file.close();
+
+    // Distance matrix //
+    ifstream d_file;
+    if(sim){
+        d_file.open("sims/distance_matrix.csv"); //distance_matrix.csv
+        n_sources = wc_l("sims/distance_matrix.csv");        
+    }
+    else
+    {
+      if(gridded){
+        d_file.open("../2010_bytho_data/distance_matrix_grd.csv"); //distance_matrix.csv
+        n_sources = wc_l("../2010_bytho_data/distance_matrix_grd.csv");
+      }
+      else{
+         d_file.open("../2010_bytho_data/cj_roadconn.tab"); //distance_matrix.csv
+         n_sources = wc_l("../2010_bytho_data/cj_roadconn.tab");
+      }
+    }
+
+    d_matrix.redim(1,n_sources,1,n_lakes);
+    sources.redim(1,n_sources);
+
+    for(int i = 1;i<=n_sources;i++)
+	{
+        sources(i).Dij.redim(1,n_lakes);
+        sources(i).Gij.redim(1,n_lakes);
+        sources(i).Xit.redim(from_year-1,to_year);
+        sources(i).Xit(from_year-1)=0;
+        for(int j = 1;j<=n_lakes;j++)
+        {
+            d_file >> sources(i).Dij(j);
+        }
+    }
+    d_file.close();
+
+    // Oi //
+    ifstream o_file;
+    if(sim)
+        o_file.open("sims/Oi.csv");        
+    else
+    {
+         if(gridded)
+            o_file.open("../2010_bytho_data/Oi_grd.csv"); //gridded 
+         else
+            o_file.open("../2010_bytho_data/Oi.csv"); // (non-gridded)
+    }
+    for(int i = 1;i<=n_sources;i++)
+	{
+         o_file >> sources(i).Oi;
+         sources(i).Oi=sources(i).Oi;     
+    }
+    o_file.close();
 
     //init_chem_pars
     //if(!ll)
@@ -685,8 +700,7 @@ float l_hood()
     for(int i=1;i<=n_sampled;i++)
     {
         lake_index=sampled_index(i);
-        float alpha=calc_alpha(lake_index); //insert this inside lake loop.
-    
+        float alpha=calc_alpha(lake_index); //insert this inside lake loop.    
         if(lakes(lake_index).last_abs != 0) // observed uninvaded
         {
             for(int t=from_year+1;t<=lakes(lake_index).last_abs;t++)
@@ -695,7 +709,8 @@ float l_hood()
                     update_pp_l_hood(lake_index,t);
 
                 lh+= - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv to that year
-//         cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
+         //cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
+         //cout << lakes(lake_index).pp.UBound() << "\n";
             }
             if(lakes(lake_index).discovered != 0) // discovered invaded
             {
@@ -943,7 +958,10 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
 {
    _vbc_vec<float> pred_p(1,m_pars,1,n_val_lakes);
    ofstream val_sim_file;
-   val_sim_file.open("output/val_sim_props.tab");
+   if(sim)
+        val_sim_file.open("sims/gb_output/val_sim_props.tab");
+   else
+        val_sim_file.open("output/val_sim_props.tab");
    for(int m=1;m<=m_pars;m++)
    {
       cout << m << " of " << m_pars << "\n";
@@ -1075,7 +1093,11 @@ void write_par()
 }
 void write_traf_mat()
 {
-    ofstream traf("output/traf_mat.dat");
+    ofstream traf;
+    if(sim)
+        traf.open("sims/gb_output/traf_mat.dat");    
+    else
+        traf.open("output/traf_mat.dat");
     for(int i=1;i<=n_lakes;i++)
     {
         for(int j=1;j<=n_lakes;j++)
@@ -1086,7 +1108,11 @@ void write_traf_mat()
 }
 void write_inv_stat()
 {
-   ofstream inv_stat("output/inv_stat.dat");
+    ofstream inv_stat;
+    if(sim)
+       inv_stat.open("sims/gb_output/inv_stat.dat");
+    else
+       inv_stat.open("output/inv_stat.dat");
    for(int i=1;i<=n_lakes;i++)
    {
       inv_stat << t_vec(i) << "\n";
@@ -1096,7 +1122,11 @@ void write_inv_stat()
 }
 void write_pp()
 {
-    ofstream pp_file("output/pp.dat");
+    ofstream pp_file;
+    if(sim)
+        pp_file.open("sims/gb_output/pp.dat");
+    else
+        pp_file.open("output/pp.dat");
     int lake_to_index;
     for(int t=from_year+1;t<=to_year;t++)
     {
