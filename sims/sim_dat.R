@@ -1,7 +1,7 @@
 ########### Sim data for testing Bayesian Gravity model ############
 rm(list=ls())
 n_sources<-10
-n_lakes<-500
+n_lakes<-150
 alpha<-runif(1,0,0.25)
 error_sd<-0.75
 

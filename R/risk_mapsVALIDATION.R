@@ -5,7 +5,7 @@ library(maptools)
 
 ## Read in lake data
 lakes<-read.table("../2010_bytho_data/lakes_processed.csv")
-lakes<-read.table("sims/simmed_lakes.csv")
+#lakes<-read.table("sims/simmed_lakes.csv")
 
 ## Read in 2EB ws boundary
 ws<-readShapePoly('../lakepolygons/2EB Boundary/Dissolved_Boundary')
@@ -30,11 +30,11 @@ if(F)
 
 ## Predictions ###
 p_hat<-as.matrix(read.table('output/val_sim_props.tab'))
-p_hat<-as.matrix(read.table('sims/gb_output/val_sim_props.tab'))
+#p_hat<-as.matrix(read.table('sims/gb_output/val_sim_props.tab'))
 
 ## Observed (validation)
 o<-read.table('output/val_lakes.dat')
-o<-read.table('sims/gb_output/val_lakes.dat')
+#o<-read.table('sims/gb_output/val_lakes.dat')
 o<-o[,1]
 
 ## For plotting with colorRampPalettes
@@ -64,7 +64,7 @@ pdf('plots/risk_maps.pdf',width=16,height=8)
     plot(ws,lwd=0.5)
     points(lakes[,2],lakes[,3],col='grey',cex=0.4,pch=20)
     var_prob <- as.vector(apply(p_hat,2,var))
-
+    expected_prob <- as.vector(apply(p_hat,2,mean))
     colors<-c('blue','yellow','red')
     cus_col<-colorRampPalette(colors=colors, 
        bias = 1,  #spread out values more at the high end - for right skewed distributions.
