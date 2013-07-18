@@ -1,7 +1,7 @@
 ### Risk and uncertainty maps VALIDATION data ###
 library(rvmapp)
 library(maptools)
-
+library(raster)
 
 ## Read in lake data
 lakes<-read.table("../2010_bytho_data/lakes_processed.csv")
@@ -57,8 +57,8 @@ loc_prop <- function(pos=c(0.5,0.5))
 }
 
 
-pdf('plots/risk_maps.pdf',width=16,height=8)
-    par(mfrow=c(1,2),mar=c(0,0,0,0))
+pdf('plots/risk_maps.pdf',width=16,height=16)
+    par(mfrow=c(2,2),mar=c(0,0,0,0))
 
     ### MAP 1: variance p_hat ###
     plot(ws,lwd=0.5)
@@ -111,6 +111,9 @@ pdf('plots/risk_maps.pdf',width=16,height=8)
         digit=3,
         main="Variance",
         zval=seq(0,max(var_prob),0.001) )
+
+    loc_panel_letter <- loc_prop(c(0.05,0.95))
+    text(loc_panel_letter[1],loc_panel_letter[2],labels="A)",cex=2)
     ## ---- ##
 
 
@@ -121,8 +124,8 @@ pdf('plots/risk_maps.pdf',width=16,height=8)
     if(F){
         v <- vmapp(pred=p_hat,d=o)
         delta <- as.vector(apply(v$delta,2,mean))
-        plot(expected_prob,delta,ylim=c(-0.1,0))
-        abline(0,-1,lty=2)
+        #plot(expected_prob,delta,ylim=c(-0.1,0))
+        #abline(0,-1,lty=2)
     }
     plot(ws,lwd=0.5)
     points(lakes[,2],lakes[,3],col='grey',cex=0.4,pch=20)
@@ -172,7 +175,25 @@ pdf('plots/risk_maps.pdf',width=16,height=8)
         digit=3,
         main=expression(delta),
         zval=seq(min(delta),max(delta),0.005) )
+
+    text(loc_panel_letter[1],loc_panel_letter[2],labels="B)",cex=2)
     ## ---- ##
+
+    
+    ### Map Inset for context of 2eb in Ontario ###
+    ontimg<-brick('../stel02_178903.jpg')  ## Stub -- Will replace with GIS map
+    plotRGB(ontimg)
+    ## ---- ##
+
+    
+    ### VMAPP Delta plot ###
+    par(mar=c(5,4,4,2),cex=1.5,lwd=3)
+    plot(v,main="VMAPP estimation\nof prediction bias")
+    title(main="C)",adj=0)
+    ## ---- ##
+
+
+
 
 dev.off()
 ################################################################################

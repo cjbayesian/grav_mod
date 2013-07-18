@@ -1,9 +1,10 @@
 
 p_pars<-read.table('output/pred_pars.tab')
-
+par_names<-c('d','c','gamma','alpha')
+names(p_pars)<-par_names
 par(mfrow=c(2,2))
 for(i in 1:4)
-    hist(p_pars[,i],breaks=30)
+    hist(p_pars[,i],main=par_names[i],breaks=30)
 x11()
 plot(p_pars)
 
