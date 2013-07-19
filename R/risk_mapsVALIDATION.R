@@ -181,7 +181,8 @@ pdf('plots/risk_maps.pdf',width=16,height=16)
 
     
     ### Map Inset for context of 2eb in Ontario ###
-    ontimg<-brick('../stel02_178903.jpg')  ## Stub -- Will replace with GIS map
+    ontimg<-brick('../ontstub.jpg')  ## Stub -- Will replace with GIS map
+    par(mar=c(4,3,3,1))
     plotRGB(ontimg)
     ## ---- ##
 
