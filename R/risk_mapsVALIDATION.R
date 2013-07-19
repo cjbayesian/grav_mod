@@ -1,7 +1,8 @@
 ### Risk and uncertainty maps VALIDATION data ###
 library(rvmapp)
 library(maptools)
-library(raster)
+library(raster) ## For image import (brick)
+#library(maps) ## For scale bar in map (doesn't work since map is in UTM)
 
 ## Read in lake data
 lakes<-read.table("../2010_bytho_data/lakes_processed.csv")
