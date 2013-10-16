@@ -2,6 +2,7 @@
 library(rvmapp)
 library(maptools)
 library(raster) ## For image import (brick)
+library(png) ## simpler image import.
 #library(maps) ## For scale bar in map (doesn't work since map is in UTM)
 
 ## Read in lake data
@@ -122,7 +123,7 @@ pdf('plots/risk_maps.pdf',width=16,height=16)
 
 
     ### MAP 2: Delta ###
-    if(F){
+    if(T){
         v <- vmapp(pred=p_hat,d=o)
         delta <- as.vector(apply(v$delta,2,mean))
         #plot(expected_prob,delta,ylim=c(-0.1,0))
@@ -182,9 +183,16 @@ pdf('plots/risk_maps.pdf',width=16,height=16)
 
     
     ### Map Inset for context of 2eb in Ontario ###
-    ontimg<-brick('../ontstub.jpg')  ## Stub -- Will replace with GIS map
-    par(mar=c(4,3,3,1))
-    plotRGB(ontimg)
+    #ont<-read.table('../survey/analysis/ont_outline.dat')
+    #ontimg<-brick('../ontstub.jpg')  ## Stub -- Will replace with GIS map
+    par(mar=c(3,3,0,2))
+    plot.new()
+    lim <- par()
+    ima <- readPNG('../ontario_map2eb_noalpha_sm.png')
+    rasterImage(ima,lim$usr[1], lim$usr[3], lim$usr[2], lim$usr[4])
+    #par(mar=c(4,3,3,1))
+    #plot(ont,type='l',xlab='Longitude',ylab='Latitude')
+    #plot(ws,lwd=0.5,add=T)
     ## ---- ##
 
     
