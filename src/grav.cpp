@@ -181,7 +181,7 @@ if(run_type==1)
    _vbc_vec<float> params1;
    _vbc_vec<float> dat1;
    _vbc_vec<float> MLE_params;
-   if(no_env)
+   if(!env)
    {
       if(sim)
         par_file.open("sims/gb_output/pred_pars.tab");
@@ -280,7 +280,7 @@ if(run_type==2)
 {
    //MCMC lib
 	string mcmc_file("output/lib.mcmc");
-   if(!no_env)
+   if(env)
    {
       _vbc_vec<float> params(1,4+n_chem_var);
       _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
@@ -552,7 +552,7 @@ if(run_type==6)
    int m_pars, n_pars;
    _vbc_vec<float> params1;
    ifstream pred_pars;
-   if(no_env)
+   if(!env)
    {
       //m reps of the bootstrap/posterior
       if(sim)

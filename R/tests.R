@@ -31,11 +31,12 @@ for(lake in 1:1646)
 }
 
 x11()
-to<-max(pp_mat,na.rm=TRUE)
-plot(pp_mat[,1],type='l',ylim=c(0,to),xlim=c(1,21))
+from<-min(log(pp_mat),na.rm=TRUE)
+to<-max(log(pp_mat),na.rm=TRUE)
+plot(log(pp_mat[,1]),type='l',ylim=c(from,to),xlim=c(1,21))
 for(i in 2:1646)
 {
-   lines(pp_mat[,i],lty=i)
+   lines(log(pp_mat[,i]),lty=i)
 }
 
 

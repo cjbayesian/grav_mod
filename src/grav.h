@@ -26,7 +26,7 @@ using namespace mcmcMD;
 // GLOBALS //
     int run_type=2; //1:MLE, 2:MCMC, 3:sim spread from posterior
     int post_length=0;
-    bool no_env=FALSE; //set to true for reproducing Gertzen.
+    bool env=TRUE; //set to FALSE for reproducing Gertzen.
     int n_sim_for_smooth=100; //number of sims for smoothing the likelihood surface
     bool ll=FALSE;
     int est_env=13;
@@ -204,7 +204,7 @@ void inits()
    init_file >> tmp;
    init_file >> post_length;
    init_file >> tmp;
-   init_file >> no_env;
+   init_file >> env;
    init_file >> tmp;
    init_file >> n_sim_for_smooth;
    init_file >> tmp;
@@ -744,7 +744,7 @@ float l_hood()
 }
 float calc_alpha(int i)
 {
-   if(!no_env)
+   if(env)
    {
        float z=chem_pars(1); //intercept
        if(est_env > 0)
@@ -777,7 +777,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    c_par=params(2);
    gamma_par=params(3);
 
-   if(!no_env)
+   if(env)
    {
       for(int i=1;i<=n_chem_var+1;i++)
          chem_pars(i)=params(3+i);
@@ -834,7 +834,7 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    gamma_par=params(3);
    
 
-   if(no_env)
+   if(!env)
       glb_alpha=params(4);
    else
    { 
@@ -889,7 +889,7 @@ bool restrict_MCMC(float param,int dim)
 }
 float prior_MD(_vbc_vec<float> x, int dim)
 {
-   if(no_env)
+   if(!env)
       return -log(x(4)); //prior on alpha
    else
 	   return 0; //uninformative prior (log)
@@ -907,7 +907,7 @@ bool restrict_MCMC_MD(_vbc_vec<float> param)
       if(param(3) <=0 )
          return TRUE;
 
-      if(no_env && param(4) <= 0)
+      if(!env && param(4) <= 0)
          return TRUE;
 
    return FALSE;
@@ -930,7 +930,7 @@ void sim_spread_posterior()
       post_file >> d_par;
       post_file >> e_par;      
       post_file >> c_par;
-      if(!no_env)
+      if(env)
       {
          for(int i=1;i<=n_chem_var+1;i++)
             post_file >> chem_pars(i);
@@ -980,7 +980,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
          d_par=fixed_d;
       }
 
-      if(!no_env)
+      if(env)
       {
          for(int i=1;i<=n_chem_var+1;i++)
             chem_pars(i)=params(m,3+i);
