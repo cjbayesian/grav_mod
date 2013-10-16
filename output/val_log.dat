@@ -1,0 +1,91 @@
+==10671== Memcheck, a memory error detector
+==10671== Copyright (C) 2002-2009, and GNU GPL'd, by Julian Seward et al.
+==10671== Using Valgrind-3.6.0.SVN-Debian and LibVEX; rerun with -h for copyright info
+==10671== Command: ./gb
+==10671== Parent PID: 5155
+==10671== 
+--10671-- 
+--10671-- Valgrind options:
+--10671--    --suppressions=/usr/lib/valgrind/debian-libc6-dbg.supp
+--10671--    -v
+--10671--    --log-file=val_log.dat
+--10671-- Contents of /proc/version:
+--10671--   Linux version 2.6.32-38-generic (buildd@zirconium) (gcc version 4.4.3 (Ubuntu 4.4.3-4ubuntu5) ) #83-Ubuntu SMP Wed Jan 4 11:13:04 UTC 2012
+--10671-- Arch and hwcaps: X86, x86-sse1-sse2
+--10671-- Page sizes: currently 4096, max supported 4096
+--10671-- Valgrind library directory: /usr/lib/valgrind
+--10671-- Reading syms from /lib/ld-2.11.1.so (0x4000000)
+--10671-- Reading debug info from /lib/ld-2.11.1.so ..
+--10671-- .. CRC mismatch (computed 45f50ae1 wanted 137bc614)
+--10671-- Reading debug info from /usr/lib/debug/lib/ld-2.11.1.so ..
+--10671-- Reading syms from /home/cchivers/CAISN/grav_mod/gb (0x8048000)
+--10671-- Reading syms from /usr/lib/valgrind/memcheck-x86-linux (0x38000000)
+--10671--    object doesn't have a dynamic symbol table
+--10671-- Reading suppressions file: /usr/lib/valgrind/debian-libc6-dbg.supp
+--10671-- Reading suppressions file: /usr/lib/valgrind/default.supp
+--10671-- REDIR: 0x40160b0 (index) redirected to 0x3803e9b3 (vgPlain_x86_linux_REDIR_FOR_index)
+--10671-- Reading syms from /usr/lib/valgrind/vgpreload_core-x86-linux.so (0x401f000)
+--10671-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-x86-linux.so (0x4022000)
+==10671== WARNING: new redirection conflicts with existing -- ignoring it
+--10671--     new: 0x040160b0 (index               ) R-> 0x04025c30 index
+--10671-- REDIR: 0x4016290 (strlen) redirected to 0x4026070 (strlen)
+--10671-- Reading syms from /usr/lib/libRmath.so.1.0.0 (0x4046000)
+--10671-- Reading debug info from /usr/lib/libRmath.so.1.0.0 ..
+--10671-- .. CRC mismatch (computed 3a2dd4d4 wanted 1e21b866)
+--10671--    object doesn't have a symbol table
+--10671-- Reading syms from /home/cchivers/c++/library/libCJ (0x4073000)
+--10671-- Reading syms from /usr/lib/libstdc++.so.6.0.13 (0x408e000)
+--10671-- Reading debug info from /usr/lib/libstdc++.so.6.0.13 ..
+--10671-- .. CRC mismatch (computed 696810d9 wanted fa4c3e0b)
+--10671--    object doesn't have a symbol table
+--10671-- Reading syms from /lib/tls/i686/cmov/libm-2.11.1.so (0x4184000)
+--10671-- Reading debug info from /lib/tls/i686/cmov/libm-2.11.1.so ..
+--10671-- .. CRC mismatch (computed a765a73c wanted 8d13be57)
+--10671-- Reading debug info from /usr/lib/debug/lib/tls/i686/cmov/libm-2.11.1.so ..
+--10671-- Reading syms from /lib/libgcc_s.so.1 (0x41aa000)
+--10671-- Reading debug info from /lib/libgcc_s.so.1 ..
+--10671-- .. CRC mismatch (computed 75b2cc22 wanted fffc9534)
+--10671--    object doesn't have a symbol table
+--10671-- Reading syms from /lib/tls/i686/cmov/libc-2.11.1.so (0x41c9000)
+--10671-- Reading debug info from /lib/tls/i686/cmov/libc-2.11.1.so ..
+--10671-- .. CRC mismatch (computed 2236eb0a wanted a071c0c3)
+--10671-- Reading debug info from /usr/lib/debug/lib/tls/i686/cmov/libc-2.11.1.so ..
+--10671-- REDIR: 0x423d870 (memmove) redirected to 0x401f44c (_vgnU_ifunc_wrapper)
+--10671-- REDIR: 0x423cb10 (rindex) redirected to 0x4025ae0 (rindex)
+--10671-- REDIR: 0x423c7f0 (__GI_strlen) redirected to 0x4026050 (__GI_strlen)
+--10671-- REDIR: 0x414bbe0 (operator new(unsigned int)) redirected to 0x4025615 (operator new(unsigned int))
+--10671-- REDIR: 0x4238f40 (malloc) redirected to 0x4024e9b (malloc)
+--10671-- REDIR: 0x414bd20 (operator new[](unsigned int)) redirected to 0x40252a9 (operator new[](unsigned int))
+--10671-- REDIR: 0x42daef0 (__memmove_ssse3) redirected to 0x4027490 (memmove)
+--10671-- REDIR: 0x423c730 (strlen) redirected to 0x401f44c (_vgnU_ifunc_wrapper)
+--10671-- REDIR: 0x423c770 (__strlen_sse2) redirected to 0x4026030 (strlen)
+--10671-- REDIR: 0x4149720 (operator delete(void*)) redirected to 0x40247cc (operator delete(void*))
+--10671-- REDIR: 0x4149780 (operator delete[](void*)) redirected to 0x402444e (operator delete[](void*))
+--10671-- REDIR: 0x4238e60 (free) redirected to 0x4024ab5 (free)
+==10671== 
+==10671== Process terminating with default action of signal 2 (SIGINT)
+==10671==    at 0x804EEAC: std::vector<clsSource, std::allocator<clsSource> >::operator[](unsigned int) (in /home/cchivers/CAISN/grav_mod/gb)
+==10671==    by 0x804BD92: calc_pp() (in /home/cchivers/CAISN/grav_mod/gb)
+==10671==    by 0x804CF72: mcmc(int) (in /home/cchivers/CAISN/grav_mod/gb)
+==10671==    by 0x804D447: main (in /home/cchivers/CAISN/grav_mod/gb)
+==10671== 
+==10671== HEAP SUMMARY:
+==10671==     in use at exit: 5,708,628 bytes in 4,033 blocks
+==10671==   total heap usage: 380,977 allocs, 376,944 frees, 22,713,378 bytes allocated
+==10671== 
+==10671== Searching for pointers to 4,033 not-freed blocks
+==10671== Checked 5,698,744 bytes
+==10671== 
+==10671== LEAK SUMMARY:
+==10671==    definitely lost: 0 bytes in 0 blocks
+==10671==    indirectly lost: 0 bytes in 0 blocks
+==10671==      possibly lost: 0 bytes in 0 blocks
+==10671==    still reachable: 5,708,628 bytes in 4,033 blocks
+==10671==         suppressed: 0 bytes in 0 blocks
+==10671== Rerun with --leak-check=full to see details of leaked memory
+==10671== 
+==10671== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 22 from 7)
+--10671-- 
+--10671-- used_suppression:     22 dl-hack3-cond-1
+==10671== 
+==10671== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 22 from 7)

@@ -1,6 +1,4 @@
 sims/*.csv
 *.odt
-output/*
 gb
 images/
-plots/
