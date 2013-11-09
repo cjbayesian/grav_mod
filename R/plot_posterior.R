@@ -1,6 +1,6 @@
 
 d<-read.table('output/lib.mcmc')
-burn_in<-10000
+burn_in<-1
 n_iter<-nrow(d)-1
 
 vars<-c("i",
@@ -23,14 +23,15 @@ vars<-c("i",
     "SECCHI.DEPTH")
 
 ### Traces ###
-cur_time<-format(Sys.time(), "%Y_%m_%d_%H_%M_%S")
+#cur_time<-format(Sys.time(), "%Y_%m_%d_%H_%M_%S")
 pdf(paste('plots/traces',cur_time,'.pdf',sep=''))
 par(mfrow=c(2,1))
 for(i in 2:ncol(d))
 {
-   plot(d[,i],type='l',main=vars[i])
+   plot(d[burn_in:n_iter,i],type='l',main=vars[i])
    hist(d[burn_in:n_iter,i],main='')
 }
+
 dev.off()
 
   

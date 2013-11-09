@@ -842,14 +842,25 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
          chem_pars(i)=params(3+i);
    }
 
-   calc_traf();
-   calc_traf_mat();
-   calc_pp();
+   //calc_traf();
+   //calc_traf_mat();
+   //calc_pp();
 
-   for(int i =1;i<=3;i++)
-      sim_spread();
+   //for(int i =1;i<=3;i++)
+   //   sim_spread();
 
-   llmd=l_hood();
+   //llmd=l_hood();
+   _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
+   for(int i=1;i<=n_sim_for_smooth;i++)
+   {
+        sim_spread();
+        tmplhood(i) = l_hood();
+        //cout << i << "\t" << tmplhood(i) <<"\n";
+   }
+
+   llmd=average(tmplhood);
+
+   
 
    int n_par=params.UBound();
 
