@@ -2,6 +2,11 @@
 d<-read.table('output/lib.mcmc')
 burn_in<-1
 n_iter<-nrow(d)-1
+length( unique(d[,2]))/length(d[,2] )
+
+par(mfrow=c(5,5))
+for(i in 2:19)
+    plot(d[,i],type='l')
 
 vars<-c("i",
     "d",
@@ -21,6 +26,9 @@ vars<-c("i",
     "PH",
     "COND25",
     "SECCHI.DEPTH")
+
+names(d) <- vars
+plot(d)
 
 ### Traces ###
 #cur_time<-format(Sys.time(), "%Y_%m_%d_%H_%M_%S")
@@ -47,7 +55,7 @@ q_x<-apply(d[burn_in:n_iter,],2,quantile,c(0.025,0.975))
 
 par(mar=c(5, 7.7, 2, 2))
 plot(e_x[6:18],6:18,
-   xlim=c(min(q_x[1,6:18]),max(q_x[2,6:18])  ),
+   xlim=c(min(q_x[1,6:18]),max(q_x[2,6:18]) ),
    ylim=c(5,19),
    ylab='',
    xlab='Posterior',

@@ -245,8 +245,10 @@ void read_data()
         n_lakes = wc_l("sims/simmed_lakes.csv");
     }
     else{    
-        l_file.open("../2010_bytho_data/lakes_processed.csv"); //lakes_processed_erin_fix.csv");
-        n_lakes = wc_l("../2010_bytho_data/lakes_processed.csv");
+        //l_file.open("../2010_bytho_data/lakes_processed.csv"); //lakes_processed_erin_fix.csv");
+        //n_lakes = wc_l("../2010_bytho_data/lakes_processed.csv");
+        l_file.open("../2010_bytho_data/lakes_processed_normalized.csv"); 
+        n_lakes = wc_l("../2010_bytho_data/lakes_processed_normalized.csv");
     }
     /* File structure:
     "Hectares",
@@ -754,7 +756,7 @@ float calc_alpha(int i)
                z += chem_pars(ch)*lakes(i).chem(ch-1);
            }
        }
-       float alpha= -log(1-(1/(1+exp(-z)))); //see notebook for derivation of functional form
+       float alpha = -log(1-(1/(1+exp(-z)))); //see notebook for derivation of functional form
        //float alpha = z;
        //cout << "lake "<<i << "\t" << alpha <<"\n";
        return alpha;
@@ -772,18 +774,18 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
    _vbc_vec<float> params = *pars;
    d_par=params(1);
-   //e_par= params(2);   
-   e_par = 1;
-   c_par=params(2);
-   gamma_par=params(3);
+   e_par= params(2);   
+   //e_par = 1;
+   c_par=params(3);
+   gamma_par=params(4);
 
    if(env)
    {
       for(int i=1;i<=n_chem_var+1;i++)
-         chem_pars(i)=params(3+i);
+         chem_pars(i)=params(4+i);
    }
    else
-      glb_alpha=params(4);
+      glb_alpha=params(5);
 
    // Parameter bounds //
    if(d_par <=0 || e_par < 0 || c_par < 0 || gamma_par < 0 || glb_alpha < 0 )
@@ -814,6 +816,14 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    cout << qll <<"\n";
    if(std::isnan(qll))
       return(10000000);
+
+    // Print out distribution of alpha values at MLE
+    ofstream alphas_file;
+    alphas_file.open("output/alphas.tab",std::fstream::app);
+    for(int i=1;i<=n_lakes;i++)
+        alphas_file << calc_alpha(i) << "\t";
+    alphas_file << "\n";
+    alphas_file.close();
 
    return(-qll);//-tve because simplex is a minimizer
 }
@@ -875,7 +885,7 @@ bool restrict_MCMC(float param,int dim)
 {
    //par order: d, e, c, alpha
    // or: d, e, c, B_0:B_13
-   if(dim==1)
+/*   if(dim==1)
    {
       if(param <=0 || param >= 4)
          return TRUE;
@@ -885,6 +895,7 @@ bool restrict_MCMC(float param,int dim)
       if(param <=0 || param >=2)
          return TRUE;
    }
+*/
 /*   if(dim==3)
    {
      if(param <=0)
@@ -977,11 +988,11 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
    {
       cout << m << " of " << m_pars << "\n";
       d_par=params(m,1);
-      //e_par= params(m,2);
-      e_par = 1;
-      c_par=params(m,2);
-      gamma_par=params(m,3);
-      glb_alpha=params(m,4);
+      e_par= params(m,2);
+      //e_par = 1;
+      c_par=params(m,3);
+      gamma_par=params(m,4);
+      glb_alpha=params(m,5);
       if(fixed_d == 0) //only calc traf_mat if d is fit.
       {
          calc_traf();
@@ -994,7 +1005,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       if(env)
       {
          for(int i=1;i<=n_chem_var+1;i++)
-            chem_pars(i)=params(m,3+i);
+            chem_pars(i)=params(m,4+i);
       }
 
 

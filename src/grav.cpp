@@ -119,23 +119,30 @@ int main(int argc,char *argv[])
 
 
    /// SEEDS ///
-   chem_pars(1)=-8;
-   chem_pars(2)=0;
-   chem_pars(3)=0; //-2:1 MLE ~0
-   chem_pars(4)=0; //-1.5:1.5 MLE ~0
-   chem_pars(5)=0; //-0.4:0.2 MLE ~0
-   chem_pars(6)=0.05; //0:0.1 MLE 0.05    ***
+//i       d        e           c     B_o       NAUT        KKUT      MGUT
+//8394 1.06513 0.531416 0.000125572 -13.713 0.00405104 -0.00475339 0.0038181
+//      CAUT     PPUT1  SIO3UR      DOC       COLTR     ALKTI         ALKT
+//0.00403173 0.0571088 1.28896 -0.31447 -0.00654376 0.0621327 -0.000480646
+//        PH     COND25 SECCHI.DEPTH       NA
+//0.00852002 0.00335544    0.0995729 -380.192
+
+   chem_pars(1)=-13;
+   chem_pars(2)=0.004;
+   chem_pars(3)=-0.004; //-2:1 MLE ~0
+   chem_pars(4)=0.0038; //-1.5:1.5 MLE ~0
+   chem_pars(5)=0.004; //-0.4:0.2 MLE ~0
+   chem_pars(6)=0.057; //0:0.1 MLE 0.05    ***
    chem_pars(7)=1.3; //-0.4:0.2 MLE ~1.3  **** 
    chem_pars(8)=-0.31; //-0.7:0.1 MLE ~-0.31 ****
-   chem_pars(9)=-0.01; //-0.4:0.2 MLE ~-0.01 **
+   chem_pars(9)=-0.006; //-0.4:0.2 MLE ~-0.01 **
    chem_pars(10)=0.06; //-0.1:0.1 MLE ~0.06 *
-   chem_pars(11)=0; //-0.16:0.1 MLE ~0
-   chem_pars(12)=0; //-0.2:0.2 MLE ~0
-   chem_pars(13)=0; //-0.04:0.01 MLE ~0
-   chem_pars(14)=0.1; //-0.3:0.3 MLE ~0.1
+   chem_pars(11)=-0.0004; //-0.16:0.1 MLE ~0
+   chem_pars(12)=0.0085; //-0.2:0.2 MLE ~0
+   chem_pars(13)=0.0033; //-0.04:0.01 MLE ~0
+   chem_pars(14)=0.01; //-0.3:0.3 MLE ~0.1
 
    int test_ch=14;
-   d_par=0.175;
+   d_par=1.54;
    //float bb = l_hood();
 
    if(ll)
@@ -200,29 +207,30 @@ if(run_type==1)
           par_file.open("sims/gb_output/pred_parsENV.tab");
       else
           par_file.open("output/pred_parsENV.tab");
-      n_pars=17; //13 env + intercept + d,c,gamma
+      n_pars=18; //13 env + intercept + d,e,c,gamma
       params1.redim(1,n_pars);
       dat1.redim(1,n_pars);
       MLE_params.redim(1,n_pars);
-      params1(1)=1.27;
-      params1(2)=1.48;
-      params1(3)=0.0000489;   
+      params1(1)=1.79;
+      params1(2)=2;
+      params1(3)=0.69;
+      params1(4)=0.0000489;   
 
       /// SEEDS ///
-      params1(4)=-8;
-      params1(5)=0.01;
-      params1(6)=-0.1; //-2:1 MLE ~0
-      params1(7)=0.1; //-1.5:1.5 MLE ~0
-      params1(8)=0.1; //-0.4:0.2 MLE ~0
-      params1(9)=0.05; //0:0.1 MLE 0.05    ***
-      params1(10)=1.3; //-0.4:0.2 MLE ~1.3  **** 
-      params1(11)=-0.31; //-0.7:0.1 MLE ~-0.31 ****
-      params1(12)=-0.01; //-0.4:0.2 MLE ~-0.01 **
-      params1(13)=0.06; //-0.1:0.1 MLE ~0.06 *
-      params1(14)=0.01; //-0.16:0.1 MLE ~0
-      params1(15)=0.1; //-0.2:0.2 MLE ~0
-      params1(16)=-0.01; //-0.04:0.01 MLE ~0
-      params1(17)=0.1; //-0.3:0.3 MLE ~0.1
+      params1(5)=-6.2;
+      params1(6)=0.014;
+      params1(7)=-0.08; //-2:1 MLE ~0
+      params1(8)=0.15; //-1.5:1.5 MLE ~0
+      params1(9)=0.21; //-0.4:0.2 MLE ~0
+      params1(10)=0.03; //0:0.1 MLE 0.05    ***
+      params1(11)=-0.13; //-0.4:0.2 MLE ~1.3  **** 
+      params1(12)=-0.43; //-0.7:0.1 MLE ~-0.31 ****
+      params1(13)=-0.007; //-0.4:0.2 MLE ~-0.01 **
+      params1(14)=0.056; //-0.1:0.1 MLE ~0.06 *
+      params1(15)=0.0087; //-0.16:0.1 MLE ~0
+      params1(16)=0.081; //-0.2:0.2 MLE ~0
+      params1(17)=-0.015; //-0.04:0.01 MLE ~0
+      params1(18)=0.013; //-0.3:0.3 MLE ~0.1
    }
 
    _vbc_vec<int> tmp_index_sampled;
@@ -269,6 +277,15 @@ if(run_type==1)
          par_file << MLE_params(p) <<"\t";
       par_file << "\n";
       par_file.flush();
+
+      // Print out distribution of alpha values at MLE
+      ofstream alphas_file;
+      alphas_file.open("output/alphas.tab",std::fstream::app);
+      for(int i=1;i<=n_lakes;i++)
+      {
+        alphas_file << calc_alpha(i) << "\n";
+      }
+      alphas_file.close();
    }
    par_file.close();
 
@@ -286,13 +303,12 @@ if(run_type==2)
       _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
       prop_width(1)=0.001;
       prop_width(2)=0.05;
-      prop_width(3)=0.01;
-      prop_width(4)=0.000001;
+      prop_width(3)=0.0001;
 
 
       params(1)=1;
-      params(2)=1;
-      params(3)=1;   
+      params(2)=0.5;
+      params(3)=0.001;   
       for(int i=1;i<=n_chem_var+1;i++)
       {
          prop_width(i+3)=0.000001;
@@ -317,14 +333,14 @@ if(run_type==2)
          &prior_MD, 
          &restrict_MCMC_MD, 
          50000, 
-         1, 
+         50, 
          1, 
          mcmc_file.c_str(),
          true,
          true,
          true,
          500,
-         4);
+         2);
    }else
    {
    /// No env.
@@ -394,19 +410,40 @@ if(run_type==4)
 {
    ofstream traf_ll_file("output/traf_ll.dat");
 
-   d_par=1;
-   e_par=0;
-
+   d_par=1.54;
+   e_par=2;
+   c_par=0.8;
    calc_traf();
    calc_traf_mat();
    calc_pp();
    sim_spread();
-   cout<< l_hood() <<"\n";
+   cout << l_hood() <<"\n";
+   
+    /*
+    for(int i=1;i<=70;i++)
+    {
+        e_par=e_par+0.05;
+        cout << e_par << "\t";
+        calc_traf();
+        calc_traf_mat();
+        calc_pp();
+        sim_spread();
+        traf_ll_file << e_par  << "\t" << l_hood()  << "\n"; 
+        cout << l_hood() <<"\t";
+        sim_spread();
+        traf_ll_file << e_par  << "\t" << l_hood()  << "\n"; 
+        cout << l_hood() <<"\t";
+        sim_spread();
+        traf_ll_file << e_par  << "\t" << l_hood()  << "\n"; 
+        cout << l_hood() <<"\n";
+        traf_ll_file << e_par  << "\t" << l_hood()  << "\n"; 
+    }
+
 
    for(int i=1;i<=10;i++)
    {
       e_par=e_par+0.2;
-      c_par=0;
+      c_par=0.8;
          calc_traf();
          calc_traf_mat();
          calc_pp();
@@ -425,7 +462,7 @@ if(run_type==4)
          }
       }
    } 
-
+    */
    traf_ll_file.close();
    calc_pp();
    write_pp(); 
@@ -576,7 +613,7 @@ if(run_type==6)
           m_pars = wc_l("sims/gb_output/pred_parsENV.tab");
       else
           m_pars = wc_l("output/pred_parsENV.tab");
-      n_pars=17; //13 env + intercept + d,c,gamma
+      n_pars=18; //13 env + intercept + d,e,c,gamma
       cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
 
       params1.redim(1,m_pars,1,n_pars);
