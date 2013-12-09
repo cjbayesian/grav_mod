@@ -31,13 +31,33 @@ if(F)
 
 
 ## Predictions ###
-p_hat<-as.matrix(read.table('output/val_sim_props.tab'))
+p_hat<-as.matrix(read.table('output/val_sim_propsA.tab'))
 #p_hat<-as.matrix(read.table('sims/gb_output/val_sim_props.tab'))
 
 ## Observed (validation)
 o<-read.table('output/val_lakes.dat')
 #o<-read.table('sims/gb_output/val_lakes.dat')
 o<-o[,1]
+
+
+### Ordered preds ###
+var_prob <- as.vector(apply(p_hat,2,var))
+expected_prob <- as.vector(apply(p_hat,2,mean))
+ci <- apply(p_hat,2,quantile, probs=c(0.025,0.975))
+
+ord <- order(expected_prob)
+par(cex=1.5)
+plot(expected_prob[ord],col=(o==1)[ord]+1,pch=20,ylim=c(0,0.8),xlab='Rank',ylab='Predicted Probability')
+for(i in 1:length(ord))
+{
+    arrows(i,expected_prob[ord[i]],i,ci[1,ord[i]],col=(o==1)[ord[i]]+1,angle=90, length = 0.05)
+    arrows(i,expected_prob[ord[i]],i,ci[2,ord[i]],col=(o==1)[ord[i]]+1,angle=90, length = 0.05)
+    if((o==1)[ord[i]])
+        arrows(i,ci[2,ord[i]] + 0.2 ,i,ci[2,ord[i]] + 0.1,col=(o==1)[ord[i]]+1,angle=45, length = 0.05,lwd=3)
+}
+legend('topleft',legend=c('Uninvaded','Invaded'),pch=20,lty=1,col=1:2,cex=1.5)
+###
+
 
 ## For plotting with colorRampPalettes
 normalizeIntRange<-function(x,size=200)
