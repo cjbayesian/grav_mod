@@ -119,6 +119,7 @@ int which_max(int,int);
 void write_t();
 void write_par();
 void write_traf_mat();
+void calc_traf_mat_part(int);
 void write_inv_stat();
 void write_pp();
 
@@ -487,6 +488,18 @@ void calc_traf_mat()
     }
    cout << "Finished calculating traf mat...\n";
 }
+void calc_traf_mat_part(int row)
+{
+   //Calculate rows of the traf_mat only as needed.
+    for(int i=1;i<=n_lakes;i++)
+    {
+        traf_mat(i,row)=0;            
+        for(int s=1;s<=n_sources;s++)
+            traf_mat(i,row)+=sources(s).Gij(i)*sources(s).Gij(row)*sources(s).Oi;
+
+        traf_mat(row,i)=traf_mat(i,row);
+    }
+}
 
 // *************************************************
 
@@ -642,8 +655,7 @@ void sim_spread()
         for(int i=1;i<=state(t-1).n_u_inv;i++)
         {
             lake_index=state(t-1).u_inv(i);
-
-             alpha=calc_alpha(lake_index);
+            alpha=calc_alpha(lake_index);
 
             if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t) + gamma_par, c_par ) )  >= runif(0,1) 
                      || lakes(lake_index).discovered==t ) 
@@ -839,9 +851,9 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    _vbc_vec<float> params = *pars;
    float llmd;
    d_par=params(1);
-   //e_par= params(2);
-   c_par=params(2);
-   gamma_par=params(3);
+   e_par= params(2);
+   c_par=params(3);
+   gamma_par=0; //params(3);
    
 
    if(!env)
@@ -867,9 +879,10 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
         tmplhood(i) = l_hood();
         //cout << i << "\t" << tmplhood(i) <<"\n";
    }
+   
 
-   llmd=average(tmplhood);
-
+   llmd = average(tmplhood);
+   llmd = llmd + dnorm(chem_pars(1),-8,5,true);
    
 
    int n_par=params.UBound();
@@ -926,7 +939,7 @@ bool restrict_MCMC_MD(_vbc_vec<float> param)
       if(param(2) <=0 || param(2) >= 2)
          return TRUE;
 
-      if(param(3) <=0 )
+      if(param(3) < 0 )
          return TRUE;
 
       if(!env && param(4) <= 0)

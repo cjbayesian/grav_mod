@@ -303,12 +303,12 @@ if(run_type==2)
       _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
       prop_width(1)=0.001;
       prop_width(2)=0.05;
-      prop_width(3)=0.0001;
+      prop_width(3)=0.01;
 
 
       params(1)=1;
       params(2)=0.5;
-      params(3)=0.001;   
+      params(3)=1.5;   
       for(int i=1;i<=n_chem_var+1;i++)
       {
          prop_width(i+3)=0.000001;
@@ -340,7 +340,7 @@ if(run_type==2)
          true,
          true,
          500,
-         2);
+         4);
    }else
    {
    /// No env.
