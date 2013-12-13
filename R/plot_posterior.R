@@ -1,12 +1,10 @@
 
 d<-read.table('output/lib.mcmc')
-burn_in<-1
+burn_in<-2000
+d <- d[burn_in:nrow(d),]
 n_iter<-nrow(d)-1
 length( unique(d[,2]))/length(d[,2] )
 
-par(mfrow=c(5,5))
-for(i in 2:19)
-    plot(d[,i],type='l')
 
 vars<-c("i",
     "d",
@@ -28,6 +26,11 @@ vars<-c("i",
     "SECCHI.DEPTH")
 
 names(d) <- vars
+
+par(mfrow=c(5,4))
+for(i in 2:19)
+    plot(d[,i],type='l',main=names(d)[i])
+
 plot(d)
 
 ### Traces ###

@@ -41,6 +41,18 @@ int main(int argc,char *argv[])
    if(fixed_d != 0) //run traf_mat once and only once (for faster prototyping)
    {
       calc_traf();
+       /* _vbc_vec<float> Uj(1,n_lakes);
+        for(int j=1;j<=n_lakes;j++)
+        {
+            Uj(j) = 0;
+            for(int i=1;i<=n_sources;i++)
+            {
+                Uj(j) += sources(i).Gij(j) * sources(i).Oi;
+            }
+            cout << Uj(j) << "\t" <<  1-exp(- pow(0.001 * Uj(j), 1 ) ) << "\n";
+        }
+
+      */
       calc_traf_mat();
       calc_pp();
    }

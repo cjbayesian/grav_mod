@@ -64,7 +64,7 @@ using namespace mcmcMD;
 class clsLake
 	{
 	public:
-		float Wj,x,y,alpha;
+		float Wj,x,y,alpha,Uj;
 		bool invaded;
       bool val_invaded;
       int discovered;
@@ -119,7 +119,7 @@ int which_max(int,int);
 void write_t();
 void write_par();
 void write_traf_mat();
-void calc_traf_mat_part(int);
+void calc_traf_mat_part(_vbc_vec<int>);
 void write_inv_stat();
 void write_pp();
 
@@ -488,19 +488,41 @@ void calc_traf_mat()
     }
    cout << "Finished calculating traf mat...\n";
 }
-void calc_traf_mat_part(int row)
+void calc_traf_mat_part(_vbc_vec<int> tracked)
 {
    //Calculate rows of the traf_mat only as needed.
     for(int i=1;i<=n_lakes;i++)
     {
-        traf_mat(i,row)=0;            
-        for(int s=1;s<=n_sources;s++)
-            traf_mat(i,row)+=sources(s).Gij(i)*sources(s).Gij(row)*sources(s).Oi;
+        if(tracked(i) == 1)
+        {
+            for(int j=1;j<=i-1;j++)
+            {
+                if(tracked(j) == 1)
+                {
+                    traf_mat(i,j)=0;            
+                    for(int s=1;s<=n_sources;s++)
+                        traf_mat(i,j)+=sources(s).Gij(i)*sources(s).Gij(j)*sources(s).Oi;
 
-        traf_mat(row,i)=traf_mat(i,row);
+                    traf_mat(j,i)=traf_mat(i,j);
+                    //cout << i << " " << j << ": " << traf_mat(j,i) << "\n";
+                }
+            }
+        }
     }
 }
 
+// Uj is the maximum propagule pressure to lake j (ie when everything is invaded).
+void calc_Uj()
+{
+    for(int j=1;j<=n_lakes;j++)
+    {
+        lakes(j).Uj = 0;
+        for(int i=1;i<=n_sources;i++)
+        {   
+            lakes(j).Uj += sources(i).Gij(j) * sources(i).Oi;
+        }
+    }
+}
 // *************************************************
 
 void calc_pp()
@@ -645,27 +667,61 @@ void sample_t_l(int i)
 }
 void sim_spread()
 {
-    float alpha;
+    _vbc_vec<float> alpha(1,n_lakes);
     int lake_index;
+    // determine which lakes we need to fill in traf_mat for:
+    _vbc_vec<float> unifs(1,n_lakes,from_year+1,to_year);
+    _vbc_vec<int> test_lakes(1,n_lakes);
+    for(int i=1;i<=n_lakes;i++)
+    {
+        float min_unifs = 1;
+        test_lakes(i) = 0;
+        alpha(i)=calc_alpha(i);
+        for(int t=from_year+1;t<=to_year;t++)
+        {
+            unifs(i,t) = runif(0,1);
+            if( unifs(i,t) < min_unifs ) min_unifs = unifs(i,t);
+        }
+        if( 1-exp(- pow(alpha(i) * lakes(i).Uj + gamma_par, c_par ) ) > min_unifs || lakes(i).discovered != 0 || lakes(i).last_abs != 0 )
+        {
+            //cout << lakes(i).last_abs << "++++\n";
+            test_lakes(i) = 1;
+            //cout << i << "\n";
+        }
+    }
+    calc_traf_mat_part(test_lakes);
+            //cout << "------------------------------------\n";
+    update_sim_pp(from_year);
     for(int t=from_year+1;t<=to_year;t++)
     {
         state(t).n_inv=state(t-1).n_inv;
         state(t).n_u_inv=0;
         state(t).n_new_inv=0;
+cout << t << "=====" << state(t-1).n_u_inv << "\n";
         for(int i=1;i<=state(t-1).n_u_inv;i++)
         {
             lake_index=state(t-1).u_inv(i);
-            alpha=calc_alpha(lake_index);
-
-            if(  ( 1-exp(- pow(alpha *lakes(lake_index).pp(t) + gamma_par, c_par ) )  >= runif(0,1) 
-                     || lakes(lake_index).discovered==t ) 
-                     && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
+            if(test_lakes(lake_index) == 1 || lakes(lake_index).discovered==t)
             {
-                state(t).n_inv++;
-                state(t).n_new_inv++;
-                state(t).new_inv(state(t).n_new_inv)=lake_index;
-                t_vec(lake_index)=t;
-                
+                //cout << "*********" << lakes(lake_index).pp(t) << "\n";
+                //alpha(lake_index)=calc_alpha(lake_index);
+                if(  ( 1-exp(- pow(alpha(lake_index) *lakes(lake_index).pp(t) + gamma_par, c_par ) )  >= unifs(lake_index,t) 
+                         || lakes(lake_index).discovered==t ) 
+                         && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
+                {
+//if(lake_index == 134) cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+                    state(t).n_inv++;
+                    state(t).n_new_inv++;
+                    state(t).new_inv(state(t).n_new_inv)=lake_index;
+                    state(t).inv(state(t).n_inv)=lake_index;
+                    t_vec(lake_index)=t;
+//if(lake_index == 134) cout << state(t).new_inv(state(t).n_new_inv) << "\t" << t << "\n";
+                    
+                } else {
+                    state(t).n_u_inv++;
+                    state(t).u_inv(state(t).n_u_inv)=lake_index;
+                    t_vec(lake_index)=to_year+1;
+                }
             }else{
                 state(t).n_u_inv++;
                 state(t).u_inv(state(t).n_u_inv)=lake_index;
@@ -683,6 +739,7 @@ void update_sim_pp(int t)
     //add pp from each newly invaded lake at time t to each uninvaded lake
     int to_lake_index;
     int from_lake_index;
+    //could just do this over those lakes that we will either test or need in likelihood.
     for(int i=1;i<=state(t).n_u_inv;i++)
     {
         to_lake_index=state(t).u_inv(i);
@@ -721,10 +778,7 @@ float l_hood()
             {
                 if(t_vec(lake_index)<t)
                     update_pp_l_hood(lake_index,t);
-
                 lh+= - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv to that year
-         //cout << "A\t"<<lake_index << "\t" <<  pow(lakes(lake_index).pp(t),c_par) * -alpha << "\n";
-         //cout << lakes(lake_index).pp.UBound() << "\n";
             }
             if(lakes(lake_index).discovered != 0) // discovered invaded
             {
@@ -733,11 +787,10 @@ float l_hood()
                 {
                    if(t_vec(lake_index)<t)
                        update_pp_l_hood(lake_index,t);
-    
+
                     tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
                 }
                 lh+= log(1-exp(tmp_lh));
-//         cout << "B\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
             }
         }else{
             tmp_lh=0;
@@ -749,11 +802,21 @@ float l_hood()
                 tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
             }
             lh += log(1-exp(tmp_lh));
-//         cout << "C\t"<< lake_index << "\t" <<  log(1-exp(tmp_lh)) << "\n";
         }
+    if(lake_index ==134) //pp only getting calc'd in 1990? wtf?
+    {
+        cout << lake_index << ": " << lakes(lake_index).discovered << ":: " << lakes(lake_index).last_abs << ":: "<< lh << "\n";
+        cout << lakes(lake_index).pp(lakes(lake_index).discovered) << " :: " << lakes(lake_index).pp(lakes(lake_index).last_abs-2) << "\n";
+        cout << t_vec(134) << "***\n";
+/*        for(int i=1;i<=state(2009).n_u_inv;i++)
+            cout << state(2009).u_inv(i) << "---\n";
+        for(int i=1;i<=state(2009).n_inv;i++)
+            cout << state(2009).inv(i) << "+++\n";
+*/
     }
 
-    //cout << lh << "\n";
+    }
+
     return lh;
 }
 float calc_alpha(int i)
@@ -864,7 +927,8 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
          chem_pars(i)=params(3+i);
    }
 
-   //calc_traf();
+   calc_traf();
+
    //calc_traf_mat();
    //calc_pp();
 
