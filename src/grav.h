@@ -556,7 +556,7 @@ void calc_pp_validation(_vbc_vec<int> indicies) //for calculated pp in each rele
             lake_from_index=state(t-1).new_inv(i);
             lakes(lake_to_index).pp(t) += traf_mat(lake_from_index,lake_to_index);
          }
-         cout << lake_to_index << "\t" << lakes(lake_to_index).pp(t) << "\n";
+         //cout << lake_to_index << "\t" << lakes(lake_to_index).pp(t) << "\n";
       }
    }
 }
@@ -697,7 +697,6 @@ void sim_spread()
         state(t).n_inv=state(t-1).n_inv;
         state(t).n_u_inv=0;
         state(t).n_new_inv=0;
-cout << t << "=====" << state(t-1).n_u_inv << "\n";
         for(int i=1;i<=state(t-1).n_u_inv;i++)
         {
             lake_index=state(t-1).u_inv(i);
@@ -709,13 +708,11 @@ cout << t << "=====" << state(t-1).n_u_inv << "\n";
                          || lakes(lake_index).discovered==t ) 
                          && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
                 {
-//if(lake_index == 134) cout << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
                     state(t).n_inv++;
                     state(t).n_new_inv++;
                     state(t).new_inv(state(t).n_new_inv)=lake_index;
                     state(t).inv(state(t).n_inv)=lake_index;
                     t_vec(lake_index)=t;
-//if(lake_index == 134) cout << state(t).new_inv(state(t).n_new_inv) << "\t" << t << "\n";
                     
                 } else {
                     state(t).n_u_inv++;
@@ -732,6 +729,7 @@ cout << t << "=====" << state(t-1).n_u_inv << "\n";
             update_sim_pp(t);
       //cout << state(t).n_inv << " ";
     }
+    cout << to_year << "=====" << state(to_year).n_u_inv << "\n";
    //cout << "\n";
 }
 void update_sim_pp(int t)
@@ -803,18 +801,18 @@ float l_hood()
             }
             lh += log(1-exp(tmp_lh));
         }
-    if(lake_index ==134) //pp only getting calc'd in 1990? wtf?
+/*    if(lake_index ==134) //pp only getting calc'd in 1990? wtf?
     {
         cout << lake_index << ": " << lakes(lake_index).discovered << ":: " << lakes(lake_index).last_abs << ":: "<< lh << "\n";
         cout << lakes(lake_index).pp(lakes(lake_index).discovered) << " :: " << lakes(lake_index).pp(lakes(lake_index).last_abs-2) << "\n";
         cout << t_vec(134) << "***\n";
-/*        for(int i=1;i<=state(2009).n_u_inv;i++)
+        for(int i=1;i<=state(2009).n_u_inv;i++)
             cout << state(2009).u_inv(i) << "---\n";
         for(int i=1;i<=state(2009).n_inv;i++)
             cout << state(2009).inv(i) << "+++\n";
-*/
-    }
 
+    }
+*/
     }
 
     return lh;
@@ -946,7 +944,7 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    
 
    llmd = average(tmplhood);
-   llmd = llmd + dnorm(chem_pars(1),-8,5,true);
+   llmd = llmd + dnorm(chem_pars(1),-5,5,true);
    
 
    int n_par=params.UBound();

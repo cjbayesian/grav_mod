@@ -138,20 +138,22 @@ int main(int argc,char *argv[])
 //        PH     COND25 SECCHI.DEPTH       NA
 //0.00852002 0.00335544    0.0995729 -380.192
 
-   chem_pars(1)=-13;
-   chem_pars(2)=0.004;
-   chem_pars(3)=-0.004; //-2:1 MLE ~0
-   chem_pars(4)=0.0038; //-1.5:1.5 MLE ~0
-   chem_pars(5)=0.004; //-0.4:0.2 MLE ~0
-   chem_pars(6)=0.057; //0:0.1 MLE 0.05    ***
-   chem_pars(7)=1.3; //-0.4:0.2 MLE ~1.3  **** 
-   chem_pars(8)=-0.31; //-0.7:0.1 MLE ~-0.31 ****
-   chem_pars(9)=-0.006; //-0.4:0.2 MLE ~-0.01 **
-   chem_pars(10)=0.06; //-0.1:0.1 MLE ~0.06 *
-   chem_pars(11)=-0.0004; //-0.16:0.1 MLE ~0
-   chem_pars(12)=0.0085; //-0.2:0.2 MLE ~0
-   chem_pars(13)=0.0033; //-0.04:0.01 MLE ~0
-   chem_pars(14)=0.01; //-0.3:0.3 MLE ~0.1
+//0.407766	1.44137	0.417034	-10.8476	0.708086 -0.0150081	-0.404532	-0.512538	0.689779	0.43177-0.584563	-0.224491	0.786624	1.0269	0.868935	-0.0982729	0.37267
+
+   chem_pars(1)=-10;
+   chem_pars(2)=0.7;
+   chem_pars(3)=-0.01; //-2:1 MLE ~0
+   chem_pars(4)=-0.38; //-1.5:1.5 MLE ~0
+   chem_pars(5)=-0.5; //-0.4:0.2 MLE ~0
+   chem_pars(6)=0.68; //0:0.1 MLE 0.05    ***
+   chem_pars(7)=0.43; //-0.4:0.2 MLE ~1.3  **** 
+   chem_pars(8)=-0.58; //-0.7:0.1 MLE ~-0.31 ****
+   chem_pars(9)=-0.22; //-0.4:0.2 MLE ~-0.01 **
+   chem_pars(10)=0.78; //-0.1:0.1 MLE ~0.06 *
+   chem_pars(11)=1.02; //-0.16:0.1 MLE ~0
+   chem_pars(12)=0.85; //-0.2:0.2 MLE ~0
+   chem_pars(13)=-0.09; //-0.04:0.01 MLE ~0
+   chem_pars(14)=0.37; //-0.3:0.3 MLE ~0.1
 
    int test_ch=14;
    d_par=1.54;
@@ -313,17 +315,16 @@ if(run_type==2)
    {
       _vbc_vec<float> params(1,4+n_chem_var);
       _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
-      prop_width(1)=0.001;
+      prop_width(1)=0.05;
       prop_width(2)=0.05;
-      prop_width(3)=0.01;
+      prop_width(3)=0.05;
 
-
-      params(1)=1;
-      params(2)=0.5;
-      params(3)=1.5;   
+      params(1)=0.4;
+      params(2)=1.4;
+      params(3)=0.42;   
       for(int i=1;i<=n_chem_var+1;i++)
       {
-         prop_width(i+3)=0.000001;
+         prop_width(i+3)=0.0001;
          params(i+3)=chem_pars(i);
       }
       prop_width(4)=0.1;
@@ -385,7 +386,7 @@ if(run_type==2)
          &likelihood_wrapperMCMC_MD,
          &prior_MD, 
          &restrict_MCMC_MD, 
-         50000, 
+         500000, 
          1, 
          1, 
          mcmc_file.c_str(),
@@ -393,7 +394,7 @@ if(run_type==2)
          true,
          true,
          500,
-         4);
+         5);
    }
 
 

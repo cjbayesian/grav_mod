@@ -1,7 +1,8 @@
 
 d<-read.table('output/lib.mcmc')
-burn_in<-2000
-d <- d[burn_in:nrow(d),]
+burn_in<-10000
+thinned<- seq(burn_in,nrow(d)-1,10)
+d <- d[thinned,]
 n_iter<-nrow(d)-1
 length( unique(d[,2]))/length(d[,2] )
 
@@ -30,6 +31,16 @@ names(d) <- vars
 par(mfrow=c(5,4))
 for(i in 2:19)
     plot(d[,i],type='l',main=names(d)[i])
+for(i in 2:19)
+    plot(d[sample(1:nrow(d)),i],type='l',main=names(d)[i])
+
+par(mfrow=c(5,4))
+for(i in 2:19)
+    hist(d[,i],probability=TRUE,main=names(d)[i])
+
+x11()
+plot(d$c,d$B_o)# ,ylim=c(-14,-6),xlim=c(0.3,1.5))
+ 
 
 plot(d)
 
