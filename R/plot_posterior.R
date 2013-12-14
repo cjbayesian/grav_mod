@@ -29,8 +29,8 @@ vars<-c("i",
 names(d) <- vars
 
 par(mfrow=c(5,4))
-for(i in 2:19)
-    plot(d[,i],type='l',main=names(d)[i])
+#for(i in 2:19)
+#    plot(d[,i],type='l',main=names(d)[i])
 for(i in 2:19)
     plot(d[sample(1:nrow(d)),i],type='l',main=names(d)[i])
 
