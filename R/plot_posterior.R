@@ -1,6 +1,6 @@
 
 d<-read.table('output/lib.mcmc')
-burn_in<-10000
+burn_in<-5000
 thinned<- seq(burn_in,nrow(d)-1,10)
 d <- d[thinned,]
 n_iter<-nrow(d)-1
@@ -29,10 +29,13 @@ vars<-c("i",
 names(d) <- vars
 
 par(mfrow=c(5,4))
-#for(i in 2:19)
-#    plot(d[,i],type='l',main=names(d)[i])
 for(i in 2:19)
-    plot(d[sample(1:nrow(d)),i],type='l',main=names(d)[i])
+{    plot(d[,i],type='l',main=names(d)[i])
+    abline(h=0,lty=2)
+}
+
+#for(i in 2:19)
+#    plot(d[sample(1:nrow(d)),i],type='l',main=names(d)[i])
 
 par(mfrow=c(5,4))
 for(i in 2:19)

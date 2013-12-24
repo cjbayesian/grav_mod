@@ -1,4 +1,3 @@
-p2 <- 0.3 ## Detection Probability
 n_sampled <- floor(0.2*n_lakes) ## sample 20% of lakes
 look_lakes <- sample(1:n_lakes,n_sampled)
 
@@ -19,8 +18,8 @@ for(l in look_lakes)
     }
 }
 
-plot(inv_year[found_year!=0],found_year[found_year!=0])
-abline(0,1)
+#plot(inv_year[found_year!=0],found_year[found_year!=0])
+#abline(0,1)
 
 
 

@@ -26,13 +26,15 @@ using namespace mcmcMD;
 // GLOBALS //
     int run_type=2; //1:MLE, 2:MCMC, 3:sim spread from posterior
     int post_length=0;
-    bool env=TRUE; //set to FALSE for reproducing Gertzen.
+    bool env=FALSE; //set to FALSE for reproducing Gertzen.
+    bool fit_pdet=FALSE;
     int n_sim_for_smooth=100; //number of sims for smoothing the likelihood surface
     bool ll=FALSE;
     int est_env=13;
     bool sim=FALSE;
     bool gridded=TRUE;
     bool boot=TRUE;
+    float pdet=0.2; //detection probability to be fit
     float d_par=2; //0.288344;   //to be fit
     float e_par=1;        //to be fit
     float c_par=1;          //to be fit
@@ -46,6 +48,8 @@ using namespace mcmcMD;
     int to_year=2009;
     int n_sampled=0;
     float fixed_d=0;
+    bool new_tr_par=TRUE;
+    string parseeds_file;
     _vbc_vec<float> d_matrix;
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit
     _vbc_vec<float> traf_mat;
@@ -53,7 +57,7 @@ using namespace mcmcMD;
     _vbc_vec<int> sampled_index;
     _vbc_vec<int> val_lakes_index(1,n_val_lakes);
     _vbc_vec<int> val_lakes_inv_index(1,n_lakes);
-
+    _vbc_vec<string> parnames;
 //debugging output //
     ofstream track_lake("output/tl.dat");
     ofstream t_file("output/t_mcmc.dat");
@@ -120,8 +124,11 @@ void write_t();
 void write_par();
 void write_traf_mat();
 void calc_traf_mat_part(_vbc_vec<int>);
+void clear_traf_mat();
 void write_inv_stat();
 void write_pp();
+float l_hood();
+float l_hood_detp();
 
 float average(_vbc_vec<float> );
 int wc_l(string);
@@ -138,6 +145,8 @@ _vbc_vec<float> predict_p(_vbc_vec<float>,_vbc_vec<int>,int); //pars,indicies
 _vbc_vec<int> sample_w_replace(_vbc_vec<int>);
 _vbc_vec<int> sample_wo_replace(_vbc_vec<int>,int);
 
+void link_pars(_vbc_vec<string> ,_vbc_vec<float> );
+void parse_par_seeds(string,_vbc_vec<float> *);
 #endif;
 
 ////////////////////////////////////////////////////////////////////
@@ -147,20 +156,16 @@ void args(int argc,char *argv[])
 	int optind=1;
 	while ((optind < argc) && (argv[optind][0]=='-')) 
 	{
-        string sw = argv[optind]; //-s flag for simulated data
-      if (sw=="-s") 
+      string sw = argv[optind]; //-s flag for simulated data
+      if (sw=="-seeds") 
 		{    
 			optind++;
-			sim = true;
-            n_sources = atoi(argv[optind]);
-            optind++;
-            n_lakes = atoi(argv[optind]);
-	
-            cout << "Using sims\n";
-	    }
-	   else if (sw=="-d")  //-d flag for real data
-		{
-			cout << "Using Data\n";
+            parseeds_file = argv[optind];
+	   }
+      else if (sw=="-runtype")
+      {
+         optind++;
+         run_type = atoi(argv[optind]);
       }
       else if (sw=="-ll") //-ll flag to call l_hood() with given pars
       {
@@ -175,23 +180,24 @@ void args(int argc,char *argv[])
             optind++;
             e_par = atof(argv[optind]);
             get_gen_pars();
-       }
-       else if (sw=="-lld") //-ll flag to call l_hood() with given pars
-       {
+        }
+        else if (sw=="-lld") //-ll flag to call l_hood() with given pars
+        {    
             ll=TRUE; 
             sim = false;  
             optind++;         
             d_par = atof(argv[optind]);
             optind++;
             e_par = atof(argv[optind]);
-       }
-       else
-		 {
+        }
+        else
+		{
          cerr << "Unknown switch: " << argv[optind] << endl 
-		   	<< "Options:\n\t-s: Simulated Data \n\t-d: real data\n" 
+		   	<< "Options:\n\t-seeds <seed params file>  \n\t-runtype: <integer run type>\n" 
             << "Usage: ./gb -s <n_sources> <n_lakes>\n";
-		 }
-       optind++;
+            exit(1);
+		}
+        optind++;
 	} // end of arg-decoding
 }
 
@@ -201,11 +207,7 @@ void inits()
    ifstream init_file("inits.ini");
 
    init_file >> tmp;
-   init_file >> run_type;
-   init_file >> tmp;
    init_file >> post_length;
-   init_file >> tmp;
-   init_file >> env;
    init_file >> tmp;
    init_file >> n_sim_for_smooth;
    init_file >> tmp;
@@ -218,6 +220,10 @@ void inits()
    init_file >> fixed_d;
    init_file >> tmp;
    init_file >> sim;
+   init_file >> tmp;
+   init_file >> fit_pdet;
+   init_file >> tmp;
+   init_file >> to_year;
 
    init_file.close();
    if(fixed_d != 0)
@@ -329,8 +335,11 @@ void read_data()
         }
         if( (lakes(i).discovered != 0 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s) and validation lakes)
         {
-            n_sampled++;
-            tmp_index_sampled(n_sampled)=i;
+            if( (fit_pdet && lakes(i).discovered != 0) ||  !fit_pdet )
+            {
+                n_sampled++;
+                tmp_index_sampled(n_sampled)=i;
+            }
         }
         for(int j = 1;j<=n_chem_var;j++)
         {
@@ -402,7 +411,8 @@ void read_data()
     for(int i = 1;i<=n_sources;i++)
 	{
          o_file >> sources(i).Oi;
-         sources(i).Oi=sources(i).Oi;     
+         sources(i).Oi=sources(i).Oi;   
+         //cout <<   sources(i).Oi << "\n";
     }
     o_file.close();
 
@@ -499,14 +509,28 @@ void calc_traf_mat_part(_vbc_vec<int> tracked)
             {
                 if(tracked(j) == 1)
                 {
-                    traf_mat(i,j)=0;            
-                    for(int s=1;s<=n_sources;s++)
-                        traf_mat(i,j)+=sources(s).Gij(i)*sources(s).Gij(j)*sources(s).Oi;
+                    if(new_tr_par || traf_mat(i,j)==0) //only calc if new pars or not already calc'd.
+                    {
+                        traf_mat(i,j)=0;            
+                        for(int s=1;s<=n_sources;s++)
+                            traf_mat(i,j)+=sources(s).Gij(i)*sources(s).Gij(j)*sources(s).Oi;
 
-                    traf_mat(j,i)=traf_mat(i,j);
+                        traf_mat(j,i)=traf_mat(i,j);
+                    }
                     //cout << i << " " << j << ": " << traf_mat(j,i) << "\n";
                 }
             }
+        }
+    }
+}
+void clear_traf_mat()
+{
+    for(int i=1;i<=n_lakes;i++)
+    {
+        for(int j=1;j<=n_lakes;j++)
+        {
+            traf_mat(i,j) = 0;
+            traf_mat(j,i) = 0;
         }
     }
 }
@@ -729,8 +753,7 @@ void sim_spread()
             update_sim_pp(t);
       //cout << state(t).n_inv << " ";
     }
-    cout << to_year << "=====" << state(to_year).n_u_inv << "\n";
-   //cout << "\n";
+    cout << "\r" << to_year << "=====" << float(state(to_year).n_inv)/float(n_lakes);
 }
 void update_sim_pp(int t)
 {
@@ -817,6 +840,73 @@ float l_hood()
 
     return lh;
 }
+
+// Likelihood for the pressence only model //
+float l_hood_detp()
+{
+    float lh(0); float tmp_lh;
+    int lake_index;
+    for(int i=1;i<=n_sampled;i++)
+    {
+        lake_index=sampled_index(i);
+        if(lakes(lake_index).discovered != 0)
+        {
+//cout << lake_index << "\t" << lakes(lake_index).discovered << "\n";
+        float alpha=calc_alpha(lake_index); //insert this inside lake loop.    
+        /*if(lakes(lake_index).last_abs != 0) // observed uninvaded
+        {
+            for(int t=from_year+1;t<=lakes(lake_index).last_abs;t++)
+            {
+                if(t_vec(lake_index)<t)
+                    update_pp_l_hood(lake_index,t);
+                lh+= - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv to that year
+            }
+            if(lakes(lake_index).discovered != 0) // discovered invaded
+            {
+                tmp_lh=0;
+                for(int t=lakes(lake_index).last_abs+1;t<=lakes(lake_index).discovered;t++)
+                {
+                   if(t_vec(lake_index)<t)
+                       update_pp_l_hood(lake_index,t);
+
+                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
+                }
+                lh+= log(1-exp(tmp_lh));
+            }
+        }else{*/
+            tmp_lh=0;
+            for(int t=from_year+1;t<=lakes(lake_index).discovered;t++) //never observed uninvaded, but discovered at T
+            {
+                // The strategy here is that we use (1-poe) for t>t_vec(lake_index), poe for t = t_vec(lake_index) 
+                // and (1-pdet) from t=t_vec(lake_index) to t<lakes(lake_index).discovered, pdet for 
+                // t<lakes(lake_index).discovered.
+                // might want to sample pdet in log space.
+
+               if(t < t_vec(lake_index))
+               {
+                    //cout << lake_index << "\n";
+                    //update_pp_l_hood(lake_index,t);
+                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv that year
+               }
+               if(t == t_vec(lake_index))
+               {
+                    tmp_lh += log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) )); //Prob inv IN that year
+//cout << lakes(lake_index).pp(t) << "\t" << log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) )) << "\t"<< tmp_lh << "\t"<< alpha <<"\n";
+                    tmp_lh += log(1 - pdet); //Prob of not detecting
+               }
+               if(t > t_vec(lake_index))
+                    tmp_lh += log(1 - pdet); //Prob of not detecting
+
+            }
+                lh += tmp_lh; //+ log(pdet); //Prob of detecting in the year of detection.
+        //}
+          }
+    }
+
+    return lh;
+}
+
+
 float calc_alpha(int i)
 {
    if(env)
@@ -846,20 +936,7 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
 {
    _vbc_vec<float> tmplhood(1,n_sim_for_smooth);
    _vbc_vec<float> params = *pars;
-   d_par=params(1);
-   e_par= params(2);   
-   //e_par = 1;
-   c_par=params(3);
-   gamma_par=params(4);
-
-   if(env)
-   {
-      for(int i=1;i<=n_chem_var+1;i++)
-         chem_pars(i)=params(4+i);
-   }
-   else
-      glb_alpha=params(5);
-
+   link_pars(parnames,(*pars));
    // Parameter bounds //
    if(d_par <=0 || e_par < 0 || c_par < 0 || gamma_par < 0 || glb_alpha < 0 )
       return(10000000);
@@ -867,36 +944,40 @@ float MLE_l_hood(_vbc_vec<float> * pars, _vbc_vec<float> * dat)
    if(fixed_d == 0)
    {
       calc_traf();
-      calc_traf_mat();
-      calc_pp();
+      //calc_traf_mat();
+      //calc_pp();
    }else{
       //*pars(1)=fixed_d;
       d_par=fixed_d;
    }
-   sim_spread();
-
+   new_tr_par=TRUE;
+   clear_traf_mat();
+   
    for(int i=1;i<=n_sim_for_smooth;i++)
    {
         sim_spread();
         tmplhood(i) = l_hood();
         //cout << i << "\t" << tmplhood(i) <<"\n";
+        new_tr_par=FALSE;
    }
 
    float qll=average(tmplhood);
    for(int i=1;i<=params.UBound();i++)
-      cout << setw(10) << params(i) <<"\t";
+      cout << setw(15) << params(i) <<"\t";
 
    cout << qll <<"\n";
    if(std::isnan(qll))
       return(10000000);
 
     // Print out distribution of alpha values at MLE
+    /*
     ofstream alphas_file;
     alphas_file.open("output/alphas.tab",std::fstream::app);
     for(int i=1;i<=n_lakes;i++)
         alphas_file << calc_alpha(i) << "\t";
     alphas_file << "\n";
     alphas_file.close();
+    */
 
    return(-qll);//-tve because simplex is a minimizer
 }
@@ -909,21 +990,9 @@ void likelihood_wrapperMCMC(_vbc_vec<float> * params, float * l,int dim)
 }
 void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
 {
-   _vbc_vec<float> params = *pars;
-   float llmd;
-   d_par=params(1);
-   e_par= params(2);
-   c_par=params(3);
-   gamma_par=0; //params(3);
-   
 
-   if(!env)
-      glb_alpha=params(4);
-   else
-   { 
-      for(int i=1;i<=n_chem_var+1;i++)
-         chem_pars(i)=params(3+i);
-   }
+   float llmd;
+   link_pars(parnames,(*pars));
 
    calc_traf();
 
@@ -938,19 +1007,21 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    for(int i=1;i<=n_sim_for_smooth;i++)
    {
         sim_spread();
-        tmplhood(i) = l_hood();
+        if(fit_pdet)
+            tmplhood(i) = l_hood_detp();
+        else
+            tmplhood(i) = l_hood();
         //cout << i << "\t" << tmplhood(i) <<"\n";
    }
    
-
    llmd = average(tmplhood);
-   llmd = llmd + dnorm(chem_pars(1),-5,5,true);
+   //if(env)
+   //    llmd = llmd + dnorm(chem_pars(1),-5,5,true);
    
-
-   int n_par=params.UBound();
+   int n_par=(*pars).UBound();
 
    for(int i=1;i<=n_par;i++)
-      cout<< params(i) <<"\t";
+      cout<< (*pars)(i) <<"\t";
 
    cout << llmd <<"\n";
 
@@ -987,7 +1058,7 @@ bool restrict_MCMC(float param,int dim)
 float prior_MD(_vbc_vec<float> x, int dim)
 {
    if(!env)
-      return -log(x(4)); //prior on alpha
+      return -log(glb_alpha); //prior on alpha
    else
 	   return 0; //uninformative prior (log)
 }
@@ -1062,25 +1133,24 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
    for(int m=1;m<=m_pars;m++)
    {
       cout << m << " of " << m_pars << "\n";
-      d_par=params(m,1);
-      e_par= params(m,2);
+      //for(int i=1;i<=n_pars,)
+      //link_pars(parnames,(*parval));
+      d_par = params(m,1);
+      e_par = params(m,2);
       //e_par = 1;
-      c_par=params(m,3);
-      gamma_par=params(m,4);
-      glb_alpha=params(m,5);
-      if(fixed_d == 0) //only calc traf_mat if d is fit.
-      {
-         calc_traf();
-         calc_traf_mat();
-         calc_pp();
-      }else{
-         d_par=fixed_d;
-      }
-
+      c_par = params(m,3);
+      //gamma_par = params(m,4);
+      //glb_alpha = params(m,5);
+      calc_traf();
+      clear_traf_mat();
+         //calc_traf_mat();
+         //calc_pp();
+      
       if(env)
       {
-         for(int i=1;i<=n_chem_var+1;i++)
-            chem_pars(i)=params(m,4+i);
+         for(int i=1;i<=n_chem_var+1;i++){
+            chem_pars(i)=params(m,3+i);
+            cout << chem_pars(i) << "\n";}
       }
 
 
@@ -1093,28 +1163,29 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
       int n_sims = 1000;
       for(int s=1;s<=n_sims;s++)
       {
+         
          sim_spread();
+         new_tr_par = FALSE;
          for(int i=1;i<=n_val_lakes;i++)
          {
             if(t_vec(indicies(i)) != to_year+1)
                prop_val_invaded(i) += 1;
-            cout << prop_val_invaded(i) << "\t";
          }
-         cout << "\n";
       }
-      
+      cout << "\n";
       for(int i=1;i<=n_val_lakes;i++)
       {
             prop_val_invaded(i) = float(prop_val_invaded(i))/float(n_sims);
             val_sim_file << prop_val_invaded(i) << "\t";
+            cout << prop_val_invaded(i) << "\t";
       }
+      cout << "\n";
       val_sim_file << "\n";
       // --------------------------------------------- //
 
 
       calc_pp_validation(indicies); // fill in all pp values for validation lakes
                                     // since calc_pp() is optimized to only calc pp for uninvaded lakes.
-
       int cal_from;
       for(int i=1;i<=n_val_lakes;i++)
       {
@@ -1131,6 +1202,7 @@ _vbc_vec<float> predict_p(_vbc_vec<float> params,_vbc_vec<int> indicies,int m_pa
 
           pred_p(m,i) = 1 - exp(log_p_uninv);
       }
+      
    }
    val_sim_file.close();
    return(pred_p);
@@ -1278,3 +1350,101 @@ int wc_l(string path_to_file)
    myfile.close();
    return(number_of_lines);
 }
+
+// Parse params
+// Read from a file defining the parameters to be used for fitting and simulating
+void parse_par_seeds(string param_def_file,_vbc_vec<float> *parval)
+{
+    ifstream parseeds(param_def_file.c_str());
+    int n_par = wc_l(param_def_file);
+    (*parval).redim(1,n_par);
+    parnames.redim(1,n_par); 
+    for(int i=1;i<=n_par;i++)
+    {
+        parseeds >> parnames(i);
+        parseeds >> (*parval)(i);
+        cout <<  parnames(i) << "\t" << (*parval)(i) << "\n";        
+    }
+    link_pars(parnames,(*parval));
+    parseeds.close();
+    //Test
+    //cout << glb_alpha << " :: " << d_par << " :: " << e_par << " :: " << c_par << "\n";
+}
+
+
+//Link par is called from parse_params
+void link_pars(_vbc_vec<string> parname_str,_vbc_vec<float> parval)
+{
+    for(int i = 1; i<= parval.UBound(); i++)
+    {
+        if(parname_str(i) == "alpha")
+            glb_alpha = parval(i);
+        else if(parname_str(i) == "d")
+            d_par = parval(i);
+        else if(parname_str(i) == "e")
+            e_par = parval(i);
+        else if(parname_str(i) == "c")
+            c_par = parval(i);
+        else if(parname_str(i) == "gamma")
+            gamma_par = parval(i);
+        else if(parname_str(i) == "env0") //intercept
+        {
+            chem_pars(1) = parval(i);
+            env = TRUE;
+        }
+        else if(parname_str(i) == "env1")
+            chem_pars(2) = parval(i);
+        else if(parname_str(i) == "env2")
+            chem_pars(3) = parval(i);
+        else if(parname_str(i) == "env3")
+            chem_pars(4) = parval(i);
+        else if(parname_str(i) == "env4")
+            chem_pars(5) = parval(i);
+        else if(parname_str(i) == "env5")
+            chem_pars(6) = parval(i);
+        else if(parname_str(i) == "env6")
+            chem_pars(7) = parval(i);
+        else if(parname_str(i) == "env7")
+            chem_pars(8) = parval(i);
+        else if(parname_str(i) == "env8")
+            chem_pars(9) = parval(i);
+        else if(parname_str(i) == "env9")
+            chem_pars(10) = parval(i);
+        else if(parname_str(i) == "env10")
+            chem_pars(11) = parval(i);
+        else if(parname_str(i) == "env11")
+            chem_pars(12) = parval(i);
+        else if(parname_str(i) == "env12")
+            chem_pars(13) = parval(i);
+        else if(parname_str(i) == "env13")
+            chem_pars(14) = parval(i);
+        else if(parname_str(i) == "env14")
+            chem_pars(15) = parval(i);
+        else if(parname_str(i) == "env15")
+            chem_pars(16) = parval(i);
+        else if(parname_str(i) == "env16")
+            chem_pars(17) = parval(i);
+        else if(parname_str(i) == "env17")
+            chem_pars(18) = parval(i);
+        else if(parname_str(i) == "env18")
+            chem_pars(19) = parval(i);
+        else if(parname_str(i) == "env19")
+            chem_pars(20) = parval(i);
+        else if(parname_str(i) == "env20")
+            chem_pars(21) = parval(i);
+        else
+        {
+            cout << "Malformed parameter name\n"; 
+            exit(1);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+

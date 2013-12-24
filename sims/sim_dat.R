@@ -1,7 +1,8 @@
 ########### Sim data for testing Bayesian Gravity model ############
 rm(list=ls())
 n_sources<-10
-n_lakes<-150
+n_lakes<-1000
+pres_only<-FALSE
 alpha<-runif(1,0,0.25)
 error_sd<-0.75
 
@@ -32,7 +33,7 @@ error_sd<-0.75
 
     ch_params<-runif(13+1,-0.4,0.4)
     #ch_params[1]<- runif(1,-4,-1) #Intercept -> alpha btw 0.01814993 and 0.3132617
-    ch_params[1]<- -3
+    ch_params[1]<- -1
 
     ch_params[2:14]<-0 ## to test on intercept only (equiv to testing common alpha)
     #ch_params[2]<- 1
@@ -73,7 +74,7 @@ error_sd<-0.75
 
 
 ##### Gravity function #######
-    grav_func<-function(e=0.8,d=2)
+    grav_func<-function(e=0.3,d=2.5)
     {
         pred_p<-array(dim=c(n_sources,n_lakes))
         for(i in 1:n_sources)
@@ -128,7 +129,7 @@ error_sd<-0.75
                         pp<-sum( sources$oi * (pred_p[,x])* X_i_t ) ##log joint prob of visiting an invaded lake then each uninvaded lake.
                         #pp<-non_spread_pp[x,year-(from_year-1)]
 
-                        return( 1-exp(-(alphas[x]*pp)^c_par) > runif(1,0,1) )
+                        return( 1-exp(-((alphas[x]*pp)^c_par) ) > runif(1,0,1) )
                     })
 
                     index_invaded<-which(invaded)
@@ -158,7 +159,7 @@ error_sd<-0.75
  #   N_obs<-c(75,75,75,75,75)
     sample_years<-c(1995,2005,2010)
     #sample_years<-1991:2010
-    N_obs<-rep(50,length(sample_years))
+    N_obs<-rep(100,length(sample_years))
 
     # Corresponds to columns 4,5,6 in data table
     invaded<-rep(0,n_lakes)
@@ -199,6 +200,16 @@ val_col[is_validation] <- 1
 val_col[is_validation & first_obs_inv] <- 2
 
 
+#### Mimic the presence only data generation process with some
+#### detection probability
+if(pres_only)
+{
+    p2 <- 0.2 ## Detection Probability
+    source('presence_only.R')
+    first_obs_inv <- found_year
+    first_obs_inv[seed_lake] <- from_year
+}
+####
 
 
 #### Wrap up lakes info and write to file ####

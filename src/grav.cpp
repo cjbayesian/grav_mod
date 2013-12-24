@@ -37,25 +37,7 @@ int main(int argc,char *argv[])
     init_state();
     init_t(); 
     calc_state();
-
-   if(fixed_d != 0) //run traf_mat once and only once (for faster prototyping)
-   {
-      calc_traf();
-       /* _vbc_vec<float> Uj(1,n_lakes);
-        for(int j=1;j<=n_lakes;j++)
-        {
-            Uj(j) = 0;
-            for(int i=1;i<=n_sources;i++)
-            {
-                Uj(j) += sources(i).Gij(j) * sources(i).Oi;
-            }
-            cout << Uj(j) << "\t" <<  1-exp(- pow(0.001 * Uj(j), 1 ) ) << "\n";
-        }
-
-      */
-      calc_traf_mat();
-      calc_pp();
-   }
+    clear_traf_mat();
 
    ofstream ll_("output/ll_test.dat");
    if(FALSE)
@@ -190,7 +172,8 @@ cout << "# sampled\t" << n_sampled << "\n";
 if(run_type==1)
 {
    // FIT ON TRAF_PARS & SPREAD PARS ONLY (NO ENV) //
-   // need a likelihood function wrapper to call l_hood() multiple times and average the result
+   // need a likelihood function wrapper to call l_hood() 
+   // multiple times and average the result
    // to smooth out stochastic surface.
    // BOOTSTRAP RESAMPLING OF DATA (SAMPLED LAKES) TO GENERATE CI //
 
@@ -198,110 +181,79 @@ if(run_type==1)
    int n_reps = 1000;
    ofstream par_file;
 
-   int n_pars; //13 env + intercept + d,c,gamma
+   int n_pars; 
    _vbc_vec<float> params1;
    _vbc_vec<float> dat1;
    _vbc_vec<float> MLE_params;
-   if(!env)
-   {
-      if(sim)
+
+    if(sim)
         par_file.open("sims/gb_output/pred_pars.tab");
-      else
+    else
         par_file.open("output/pred_pars.tab");    
-      n_pars=4;  // d,c,gamma,alpha
-      params1.redim(1,n_pars);
-      dat1.redim(1,n_pars);
-      MLE_params.redim(1,n_pars);
-      params1(1)=1.27;
-      params1(2)=1.48;
-      params1(3)=0.0000489;
-      params1(4)=0.00105;  
-   }else{
-      if(sim)        
-          par_file.open("sims/gb_output/pred_parsENV.tab");
-      else
-          par_file.open("output/pred_parsENV.tab");
-      n_pars=18; //13 env + intercept + d,e,c,gamma
-      params1.redim(1,n_pars);
-      dat1.redim(1,n_pars);
-      MLE_params.redim(1,n_pars);
-      params1(1)=1.79;
-      params1(2)=2;
-      params1(3)=0.69;
-      params1(4)=0.0000489;   
 
-      /// SEEDS ///
-      params1(5)=-6.2;
-      params1(6)=0.014;
-      params1(7)=-0.08; //-2:1 MLE ~0
-      params1(8)=0.15; //-1.5:1.5 MLE ~0
-      params1(9)=0.21; //-0.4:0.2 MLE ~0
-      params1(10)=0.03; //0:0.1 MLE 0.05    ***
-      params1(11)=-0.13; //-0.4:0.2 MLE ~1.3  **** 
-      params1(12)=-0.43; //-0.7:0.1 MLE ~-0.31 ****
-      params1(13)=-0.007; //-0.4:0.2 MLE ~-0.01 **
-      params1(14)=0.056; //-0.1:0.1 MLE ~0.06 *
-      params1(15)=0.0087; //-0.16:0.1 MLE ~0
-      params1(16)=0.081; //-0.2:0.2 MLE ~0
-      params1(17)=-0.015; //-0.04:0.01 MLE ~0
-      params1(18)=0.013; //-0.3:0.3 MLE ~0.1
-   }
+    parse_par_seeds(parseeds_file,&params1);
+    cout << env << " <<==\n";
 
-   _vbc_vec<int> tmp_index_sampled;
-   tmp_index_sampled = sampled_index;
+    n_pars = params1.UBound();
+    
+    dat1.redim(1,n_pars);
+    MLE_params = params1;
 
+    _vbc_vec<int> tmp_index_sampled;
+    tmp_index_sampled = sampled_index;
 
-   if(boot)
-   {
-      ofstream boot_file;
-      if(sim)
-          boot_file.open("sims/gb_output/boot_lakes.tab");
-      else
-          boot_file.open("output/boot_lakes.tab");    
-      for(int i=1;i<=n_reps;i++)
-      {
-         //Bootstrap resample //
-         sampled_index = sample_w_replace(tmp_index_sampled);
-         for(int j=1;j<=n_sampled;j++)
-            boot_file << sampled_index(j) << "\t";
-         boot_file << "\n";
-         boot_file.flush();
-         // --- //
+    if(boot)
+    {
+        ofstream boot_file;
+        if(sim)
+            boot_file.open("sims/gb_output/boot_lakes.tab");
+        else
+            boot_file.open("output/boot_lakes.tab");    
+        for(int i=1;i<=n_reps;i++)
+        {
+            //Bootstrap resample //
+            sampled_index = sample_w_replace(tmp_index_sampled);
+            for(int j=1;j<=n_sampled;j++)
+                boot_file << sampled_index(j) << "\t";
+            boot_file << "\n";
+            boot_file.flush();
+            // --- //
 
-         simplex::clsSimplex<float> gertzen_rep;
-         //gertzen_rep.set_param_small(1e-3);
-         gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
-         gertzen_rep.getParams(&MLE_params);
+            simplex::clsSimplex<float> gertzen_rep;
+            //gertzen_rep.set_param_small(1e-3);
+            gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
+            gertzen_rep.getParams(&MLE_params);
 
-         cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
-         for(int p=1;p<=n_pars;p++)
-            par_file << MLE_params(p) <<"\t";
-         par_file << "\n";
-         par_file.flush();
-      }
-      boot_file.close();
-   }else{
-      simplex::clsSimplex<float> gertzen_rep;
-      //gertzen_rep.set_param_small(1e-3);
-      gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
-      gertzen_rep.getParams(&MLE_params);
+            cout << "\n\nMLE "<< i << " of " << n_reps << "\n\n";
+            for(int p=1;p<=n_pars;p++)
+                par_file << MLE_params(p) <<"\t";
+            par_file << "\n";
+            par_file.flush();
+            params1 = MLE_params; //seed the next run with the MLE from this one.
+        }
+        boot_file.close();
+    }else{
+        simplex::clsSimplex<float> gertzen_rep;
+        //gertzen_rep.set_param_small(1e-3);
+        gertzen_rep.start(&dat1,&params1, &MLE_l_hood,n_pars, 1e-2);
+        gertzen_rep.getParams(&MLE_params);
 
-      cout << "\n\nMLE\n";
-      for(int p=1;p<=n_pars;p++)
+        cout << "\n\nMLE\n";
+        for(int p=1;p<=n_pars;p++)
          par_file << MLE_params(p) <<"\t";
-      par_file << "\n";
-      par_file.flush();
+        par_file << "\n";
+        par_file.flush();
 
-      // Print out distribution of alpha values at MLE
-      ofstream alphas_file;
-      alphas_file.open("output/alphas.tab",std::fstream::app);
-      for(int i=1;i<=n_lakes;i++)
-      {
-        alphas_file << calc_alpha(i) << "\n";
-      }
-      alphas_file.close();
-   }
-   par_file.close();
+        // Print out distribution of alpha values at MLE
+        ofstream alphas_file;
+        alphas_file.open("output/alphas.tab",std::fstream::app);
+        for(int i=1;i<=n_lakes;i++)
+        {
+            alphas_file << calc_alpha(i) << "\n";
+        }
+        alphas_file.close();
+    }
+    par_file.close();
 
 }
 
@@ -309,37 +261,29 @@ if(run_type==1)
 
 if(run_type==2)
 {
-   //MCMC lib
+    //MCMC lib
+   n_sim_for_smooth = 1; 
 	string mcmc_file("output/lib.mcmc");
-   if(env)
-   {
-      _vbc_vec<float> params(1,4+n_chem_var);
-      _vbc_vec<float> prop_width(1,4+n_chem_var,1,4+n_chem_var);
-      prop_width(1)=0.05;
-      prop_width(2)=0.05;
-      prop_width(3)=0.05;
 
-      params(1)=0.4;
-      params(2)=1.4;
-      params(3)=0.42;   
-      for(int i=1;i<=n_chem_var+1;i++)
-      {
-         prop_width(i+3)=0.0001;
-         params(i+3)=chem_pars(i);
-      }
-      prop_width(4)=0.1;
+   _vbc_vec<float> params;
+   _vbc_vec<float> prop_width;
 
-      _vbc_vec<float> prop_sigma;
-      prop_sigma = diag(prop_width);
+   parse_par_seeds(parseeds_file,&params);
+   cout << env << " <<==\n";
 
-      // Print out prop_sigma
-      for(int i=1;i<=n_chem_var+4;i++)
-      {
-         for(int j=1;j<=n_chem_var+4;j++)   
-            cout << prop_sigma(i,j) << " | ";
-         cout << "\n";
-      }
-     
+   int n_pars = params.UBound();
+   prop_width.redim(1,n_pars);
+
+   prop_width(1)=0.05; //d
+   prop_width(2)=0.05; //e
+   prop_width(3)=0.05; //c
+
+    for(int i=4;i<=n_pars;i++)
+        prop_width(i)=0.0001;
+
+    _vbc_vec<float> prop_sigma;
+    prop_sigma = diag(prop_width);
+
       mcmcMD::run_mcmc(params, 
          prop_sigma, 
          &likelihood_wrapperMCMC_MD,
@@ -354,63 +298,6 @@ if(run_type==2)
          true,
          500,
          4);
-   }else
-   {
-   /// No env.
-      _vbc_vec<float> params(1,4);
-      _vbc_vec<float> prop_width(1,4,1,4);
-      prop_width(1)=0.05;
-      prop_width(2)=0.05;
-      prop_width(3)=0.000001;
-      prop_width(4)=0.00001;
-
-
-      params(1)=1.27;
-      params(2)=1.48;
-      params(3)=0.0000489;
-      params(4)=0.00105;      
-
-      _vbc_vec<float> prop_sigma;
-      prop_sigma = diag(prop_width);
-
-      // Print out prop_sigma
-      for(int i=1;i<=4;i++)
-      {
-         for(int j=1;j<=4;j++)   
-            cout << prop_sigma(i,j) << " | ";
-         cout << "\n";
-      }
-     
-      mcmcMD::run_mcmc(params, 
-         prop_sigma, 
-         &likelihood_wrapperMCMC_MD,
-         &prior_MD, 
-         &restrict_MCMC_MD, 
-         500000, 
-         1, 
-         1, 
-         mcmc_file.c_str(),
-         true,
-         true,
-         true,
-         500,
-         5);
-   }
-
-
-/*	mcmcMD::run_mcmc(pms, 
-      props, 
-      &like, 
-      &prior, 
-      &restrictions, 
-      500000, 
-      1, 
-      100, 
-      file_name.c_str(),
-      TRUE,
-      TRUE,
-      1000);
-*/
 }
 
 
@@ -485,116 +372,14 @@ if(run_type==4)
 /// Holdout sets for internal AUC ////
 if(run_type==5)
 {  
-   int n_pars=4;
-   _vbc_vec<float>params1(1,n_pars); 
+   _vbc_vec<float>params1;
+   parse_par_seeds(parseeds_file,&params1);
+   cout << env << " <<==\n";
 
-   // Read parameters values from file //
-   ifstream pred_pars;
-   if(sim)
-       pred_pars.open("sims/gb_output/pred_pars.tab");
-   else
-       pred_pars.open("output/pred_pars.tab");
-   for(int j=1;j<=n_pars;j++)
-      pred_pars >> params1(j);
-
-   pred_pars.close();
-   // -- //
-
-   d_par=params1(1);
-   e_par = 1;
-   c_par=params1(2);
-   gamma_par=params1(3);
-   glb_alpha=params1(4);
-
-   calc_traf();
-   calc_traf_mat();
-   //write_traf_mat();
-
-   //Sub-sample a holdout set from sampled lakes (pre-2010)
-   int n_sub_sampled = 100,choose_from=0;
-   _vbc_vec<int> index_2006_big(1,n_lakes);
-   for(int i = 1; i<=n_lakes;i++)
-   {
-      if( (lakes(i).last_abs==2006 || lakes(i).discovered == 2006) )
-      {
-         choose_from += 1;
-         index_2006_big(choose_from)=i;
-      }
-   }
-   _vbc_vec<int> index_2006(1,choose_from);
-   for(int i = 1; i<=choose_from;i++)
-      index_2006(i)=index_2006_big(i);
-
-   
-   ofstream prop_holdout_file;
-   prop_holdout_file.open("output/holdout_sim_props.csv");
-   ofstream holdout_inv_file("output/holdout2006_data_status.csv");
-
-   _vbc_vec<int> holdout_inv_status(1,n_sub_sampled);
-   _vbc_vec<int> indicies_holdout(1,n_sub_sampled);
-   _vbc_vec<int> tmp_discovered(1,n_sub_sampled);
-   _vbc_vec<int> tmp_last_abs(1,n_sub_sampled);
-
-   cout << "Total 2006 lakes to choose from " << choose_from << "\n";
-   for(int rep=1;rep<=50;rep++)
-   {
-      indicies_holdout = sample_wo_replace(index_2006,n_sub_sampled);
-
-      //Record the year_discovered of holdoutset
-      for(int i = 1; i<=n_sub_sampled;i++)
-      {
-         if(lakes(indicies_holdout(i)).discovered == 2006)
-            holdout_inv_status(i) = 1;
-         else
-            holdout_inv_status(i) = 0;
-
-         //write year discovered 
-         if(i == n_sub_sampled)
-            holdout_inv_file << holdout_inv_status(i) << "\n";
-         else
-            holdout_inv_file << holdout_inv_status(i) << ",";
-
-
-         //save last_abs and discoved
-         tmp_discovered(i) = lakes(indicies_holdout(i)).discovered;
-         tmp_last_abs(i) = lakes(indicies_holdout(i)).last_abs;
-
-         //remove year discovered
-         lakes(indicies_holdout(i)).discovered = 0;
-         lakes(indicies_holdout(i)).last_abs = 0;
-      }   
-      
-      //SIM SPREAD
-      _vbc_vec<float> prop_holdout_invaded(1,n_sub_sampled);
-      for(int i=1;i<=n_sub_sampled;i++)
-         prop_holdout_invaded(i) = 0;
-      int n_sims=1000;
-      for(int s=1; s<= n_sims; s++)
-      {
-         sim_spread();
-         for(int i=1;i<=n_sub_sampled;i++)
-         {
-            if(t_vec(indicies_holdout(i)) <= 2006)
-               prop_holdout_invaded(i) += 1;
-         }
-      }
-      //write prop inv
-      for(int i=1;i<=n_sub_sampled;i++)
-      {
-         prop_holdout_invaded(i) = prop_holdout_invaded(i)/n_sims;
-         if(i < n_sub_sampled)
-            prop_holdout_file << prop_holdout_invaded(i) << ",";
-         else
-            prop_holdout_file << prop_holdout_invaded(i) << "\n";
-
-         //reset last_abs and discoved
-         lakes(indicies_holdout(i)).discovered = tmp_discovered(i);
-         lakes(indicies_holdout(i)).last_abs = tmp_last_abs(i);
-      }
-   }
-   holdout_inv_file.close();
-   prop_holdout_file.close();
+   int n_pars = params1.UBound();
+   //...
 }
+
 /// Predictions from Bootstapped MLE ////
 if(run_type==6)
 {  
@@ -702,6 +487,91 @@ if(run_type==6)
    }
    */
 }
+
+
+/// Validation site Predictions from Bayesian Posterior ////
+if(run_type==7)
+{  
+
+    int m_pars, n_pars;
+    _vbc_vec<float> params1;
+    ifstream pred_pars;
+
+    m_pars = wc_l("output/mcmct.lib");    
+    //m reps of the bootstrap/posterior
+    n_pars=17; //13 env + intercept + d,e,c
+    cout << "# Generating a " << n_val_lakes << " by " << m_pars << " prediction matrix\n";
+
+    params1.redim(1,m_pars,1,n_pars);
+    pred_pars.open("output/lib.mcmc500000t");
+    // read in predicted parameters from bootstrap or Bayesian
+    float jnk;
+    for(int i=1;i<=m_pars;i++)
+    {
+        pred_pars >> jnk; //index
+        for(int j=1;j<=n_pars;j++)
+        {
+            pred_pars >> params1(i,j);
+        }
+        pred_pars >> jnk; //log-likelihood
+    }
+    pred_pars.close();
+    // -- //
+
+    //for(int i=1;i<=val_lakes_index.UBound();i++) //
+    //   cout << i <<" "<< val_lakes_index(i) << "\n";
+
+    _vbc_vec<float> preds;
+    preds = predict_p(params1,val_lakes_index,m_pars); //pars,indicies of validation set
+    //write_traf_mat();
+    // Write predictions to file //
+    ofstream pred_p_file;
+    
+    pred_p_file.open("output/pred_p_bayes.tab");
+    cout << "---------------- " << "\n";
+    for(int i=1;i<=n_val_lakes;i++)
+        pred_p_file << val_lakes_index(i) << "\t";
+    pred_p_file << "\n";
+    for(int m=1;m<=m_pars;m++)
+    {
+        for(int i=1;i<=n_val_lakes;i++)
+            pred_p_file << preds(m,i) << "\t";
+        pred_p_file << "\n";
+    }
+   pred_p_file.close();
+   // -- //
+
+   // Write Validation lakes outcomes to file //
+   ofstream val_d_file;
+   if(sim)
+       val_d_file.open("sims/gb_output/val_lakes.dat");
+   else
+       val_d_file.open("output/val_lakes.dat");
+   for(int i=1;i<=n_val_lakes;i++)
+      val_d_file << lakes(val_lakes_index(i)).val_invaded << "\n";
+   val_d_file.close();
+   // -- //
+
+
+   //TEST SAMPLING FUNCTION sample_w_replace()//
+   /*
+   _vbc_vec<int> test_vec(1,4);
+   for(int i=1;i<=4;i++)
+      test_vec(i) = i;
+
+   _vbc_vec<int> rnd_vec;
+   
+   for(int i=1;i<=100;i++)
+   {
+      rnd_vec = sample_w_replace(test_vec);
+      for(int j=1;j<=4;j++)
+         cout << rnd_vec(j) << "\t";
+      cout << "\n";
+   }
+   */
+}
+
+
 
    return 0;
 }
