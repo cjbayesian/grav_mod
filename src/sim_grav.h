@@ -7,10 +7,10 @@
 
 // Globals //
    float glb_alpha_min, glb_alpha_max, c_par_min, c_par_max;
-   float pdet_min, pdet_max;
+   float d_par_min, d_par_max, e_par_min, e_par_max, pdet_min, pdet_max;
 
 void sim_inits();
-
+void generate_params();
 #endif;
 
 
@@ -18,7 +18,7 @@ void sim_inits();
 void sim_inits()
 {
    string tmp;
-   ifstream init_file("inits_sims.ini");
+   ifstream init_file("inits_sim.ini");
 
    init_file >> tmp;
    init_file >> glb_alpha_min;
@@ -27,39 +27,57 @@ void sim_inits()
    init_file >> c_par_min;
    init_file >> c_par_max;
    init_file >> tmp;
+   init_file >> d_par_min;
+   init_file >> d_par_max;
+   init_file >> tmp;
+   init_file >> e_par_min;
+   init_file >> e_par_max;
+   init_file >> tmp;
    init_file >> pdet_min;
    init_file >> pdet_max;
-   init_file >> tmp;
-   init_file >> fixed_d;
-   init_file >> tmp;
-   init_file >> sim;
-   init_file >> tmp;
-   init_file >> fit_pdet;
-   init_file >> tmp;
-   init_file >> to_year;
 
+   cout << glb_alpha_min << "\t" << glb_alpha_max << "\n";
    init_file.close();
-   if(fixed_d != 0)
-      d_par = fixed_d;
+}
 
+void generate_params()
+{
+   glb_alpha = runif(glb_alpha_min,glb_alpha_max);
+   c_par = runif(c_par_min,c_par_max);
+   d_par = runif(d_par_min,d_par_max);
+   e_par = runif(e_par_min,e_par_max);
+   pdet = runif(pdet_min,pdet_max);
+
+   cout << glb_alpha << "\t" << c_par << "\t" << d_par << "\t" << e_par << "\t" << pdet << "\n";
+}
+
+void detect()
+{
+   // Which sites to monitor
+   int n_monitored = n_lakes;
+   _vbc_vec<int> lake_inds(1,n_lakes);
+   for(int i=1;i<=n_lakes;i++) {lake_inds(i)=i;}
+   lake_inds = sample_wo_replace(lake_inds,n_monitored);
+
+   // Monitor until detected or to_year
+   int lake_index;
+   for(int i=1;i<=n_monitored;i++)
+   {
+      lake_index = lake_inds(i);
+      for(int t=t_vec(lake_index);t<=to_year;t++)
+      {
+         if(runif(0,1) < pdet && lakes(lake_index).discovered != from_year)
+         {
+            //cout << t_vec(lake_index) << "\t" << t << "\n"; 
+            lakes(lake_index).discovered = t;
+            break;
+         }
+      }
+
+   }
+   //cout << "from_year: " << from_year << "\n";
 }
 
 
-// Sim lakes and sources //
-// <<< Instead just use 2EB
-
-// Initiallize (seed) the largest lake //
-// <<< Instead just use actual seed lakes
-// <<< But we will need to clear the current records of
-//     last_abs, last_obs, last_obs_uninv, discovered
-
-
-// Simulate the invasion //
-
-
-// Simulate the detection process //
-
-
-// Fit the presence only model //
 
 

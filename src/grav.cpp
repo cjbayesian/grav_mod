@@ -31,7 +31,7 @@ int main(int argc,char *argv[])
     // Read in Data // 
     cout<< "Reading Data\n";
     read_data();
-
+    which_sampled_or_valid();
     // Set initial Params //
     cout<< "Initiallizing...\n";
     init_state();

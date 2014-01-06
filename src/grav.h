@@ -49,7 +49,7 @@ using namespace mcmcMD;
     int n_sampled=0;
     float fixed_d=0;
     bool new_tr_par=TRUE;
-    string parseeds_file;
+    string parseeds_file("no_env.par");
     _vbc_vec<float> d_matrix;
     _vbc_vec<float> chem_pars(1,n_chem_var+1); //to be fit
     _vbc_vec<float> traf_mat;
@@ -112,6 +112,7 @@ _vbc_vec<clsState> state(from_year,to_year);
 void args(int ,char *);
 void get_gen_pars();
 void sample_t_l(int);
+void which_sampled_or_valid();
 
 float calc_alpha(int);
 void calc_pp();
@@ -194,7 +195,7 @@ void args(int argc,char *argv[])
 		{
          cerr << "Unknown switch: " << argv[optind] << endl 
 		   	<< "Options:\n\t-seeds <seed params file>  \n\t-runtype: <integer run type>\n" 
-            << "Usage: ./gb -s <n_sources> <n_lakes>\n";
+            << "Usage: ./grav -s <n_sources> <n_lakes>\n";
             exit(1);
 		}
         optind++;
@@ -222,7 +223,6 @@ void inits()
    init_file >> fit_pdet;
    init_file >> tmp;
    init_file >> to_year;
-
    init_file.close();
    if(fixed_d != 0)
       d_par = fixed_d;
@@ -279,11 +279,7 @@ void read_data()
     */
     traf_mat.redim(1,n_lakes,1,n_lakes);
     t_vec.redim(1,n_lakes);
-    _vbc_vec<int> tmp_index_sampled(1,n_lakes);
-    _vbc_vec<int> tmp_val_lakes_index(1,n_lakes);    
-    _vbc_vec<int> tmp_val_inv_lakes_index(1,n_lakes); 
-    int n_validation = 0;
-    int n_invaded_in_validation_set = 0;
+
     for(int i = 1;i<=n_lakes;i++)
 	{
         lakes(i).chem.redim(1,n_chem_var);
@@ -319,45 +315,11 @@ void read_data()
          }
 
          */
-        // Count validation lakes //
-        if(lakes(i).status_2010 != 0)
-        { 
-           n_validation++;
-           tmp_val_lakes_index(n_validation)=i;
-           if(lakes(i).status_2010 == 2)
-           {
-              lakes(i).val_invaded = 1;
-              n_invaded_in_validation_set++;
-              tmp_val_inv_lakes_index(n_invaded_in_validation_set)=i;
-           }
-        }
-        if( (lakes(i).discovered != 0 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s) and validation lakes)
-        {
-            if( (fit_pdet && lakes(i).discovered != 0) ||  !fit_pdet )
-            {
-                n_sampled++;
-                tmp_index_sampled(n_sampled)=i;
-            }
-        }
         for(int j = 1;j<=n_chem_var;j++)
         {
             l_file >> lakes(i).chem(j);
         }
     }
-    cout << "Number of lakes in validation set = "<< n_validation << "\n";
-
-    sampled_index.redim(1,n_sampled);
-    for(int i = 1;i<=n_sampled;i++)
-	    sampled_index(i)=tmp_index_sampled(i);
-
-    n_val_lakes = n_validation;
-    val_lakes_index.redim(1,n_validation);
-    for(int i = 1;i<=n_validation;i++)
-      val_lakes_index(i)=tmp_val_lakes_index(i);
-
-    val_lakes_inv_index.redim(1,n_invaded_in_validation_set);
-    for(int i = 1;i<=n_invaded_in_validation_set;i++)
-      val_lakes_inv_index(i)=tmp_val_inv_lakes_index(i);
 
     l_file.close();
 
@@ -436,6 +398,57 @@ void read_data()
         pp_file.close();
     }
 }
+void which_sampled_or_valid()
+{
+   _vbc_vec<int> tmp_index_sampled(1,n_lakes);
+   _vbc_vec<int> tmp_val_lakes_index(1,n_lakes);    
+   _vbc_vec<int> tmp_val_inv_lakes_index(1,n_lakes); 
+   int n_validation = 0;
+   int n_invaded_in_validation_set = 0;
+   for(int i=1;i<=n_lakes;i++)
+   {
+      // Count validation lakes //
+      if(lakes(i).status_2010 != 0)
+      { 
+         n_validation++;
+         tmp_val_lakes_index(n_validation)=i;
+         if(lakes(i).status_2010 == 2)
+         {
+            lakes(i).val_invaded = 1;
+            n_invaded_in_validation_set++;
+            tmp_val_inv_lakes_index(n_invaded_in_validation_set)=i;
+         }
+      }
+      if( (lakes(i).discovered != 0 || lakes(i).last_abs != 0) && lakes(i).discovered != from_year) //sampled lakes (excluding the seed(s) and validation lakes)
+      {
+         if( (fit_pdet && lakes(i).discovered != 0) ||  !fit_pdet )
+         {
+             n_sampled++;
+             tmp_index_sampled(n_sampled)=i;
+         }
+      }
+   }
+
+   cout << "Number of lakes sampled = "<< n_sampled << "\n";
+   sampled_index.redim(1,n_sampled);
+   for(int i = 1;i<=n_sampled;i++)
+      sampled_index(i)=tmp_index_sampled(i);
+
+   if(n_validation > 0)
+   {
+      cout << "Number of lakes in validation set = "<< n_validation << "\n";
+
+      n_val_lakes = n_validation;
+      val_lakes_index.redim(1,n_validation);
+      for(int i = 1;i<=n_validation;i++)
+         val_lakes_index(i)=tmp_val_lakes_index(i);
+
+      val_lakes_inv_index.redim(1,n_invaded_in_validation_set);
+      for(int i = 1;i<=n_invaded_in_validation_set;i++)
+         val_lakes_inv_index(i)=tmp_val_inv_lakes_index(i);
+   }
+}
+
 void init_state()
 {
     state.redim(from_year,to_year);
@@ -708,7 +721,7 @@ void sim_spread()
         {
             //cout << lakes(i).last_abs << "++++\n";
             test_lakes(i) = 1;
-            //cout << i << "\n";
+            //cout << i << "\t" << 1-exp(- pow(alpha(i) * lakes(i).Uj + gamma_par, c_par ) )<<"\t"<< lakes(i).Uj << "\n";
         }
     }
     calc_traf_mat_part(test_lakes);
@@ -751,7 +764,7 @@ void sim_spread()
             update_sim_pp(t);
       //cout << state(t).n_inv << " ";
     }
-    cout << "\r" << to_year << "=====" << float(state(to_year).n_inv)/float(n_lakes);
+    //cout << "\r" << to_year << "=====" << float(state(to_year).n_inv)/float(n_lakes);
 }
 void update_sim_pp(int t)
 {
@@ -846,61 +859,45 @@ float l_hood_detp()
     int lake_index;
     for(int i=1;i<=n_sampled;i++)
     {
-        lake_index=sampled_index(i);
-        if(lakes(lake_index).discovered != 0)
-        {
-//cout << lake_index << "\t" << lakes(lake_index).discovered << "\n";
-        float alpha=calc_alpha(lake_index); //insert this inside lake loop.    
-        /*if(lakes(lake_index).last_abs != 0) // observed uninvaded
-        {
-            for(int t=from_year+1;t<=lakes(lake_index).last_abs;t++)
-            {
-                if(t_vec(lake_index)<t)
-                    update_pp_l_hood(lake_index,t);
-                lh+= - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv to that year
-            }
-            if(lakes(lake_index).discovered != 0) // discovered invaded
-            {
-                tmp_lh=0;
-                for(int t=lakes(lake_index).last_abs+1;t<=lakes(lake_index).discovered;t++)
-                {
-                   if(t_vec(lake_index)<t)
-                       update_pp_l_hood(lake_index,t);
+      lake_index=sampled_index(i);
+      if(lakes(lake_index).discovered != 0)
+      {
+         float alpha=calc_alpha(lake_index); //insert this inside lake loop.    
+         tmp_lh=0;
+         //never observed uninvaded, but discovered at T
+         for(int t=from_year+1;t<=lakes(lake_index).discovered;t++) 
+         {
+            // The strategy here is that we use (1-poe) 
+            // for t>t_vec(lake_index), poe for t = t_vec(lake_index) 
+            // and (1-pdet) from t=t_vec(lake_index) to t<lakes(lake_index).discovered, 
+            // pdet for t<lakes(lake_index).discovered.
+            // 
+            // might want to sample pdet in log space.
 
-                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par);
-                }
-                lh+= log(1-exp(tmp_lh));
-            }
-        }else{*/
-            tmp_lh=0;
-            for(int t=from_year+1;t<=lakes(lake_index).discovered;t++) //never observed uninvaded, but discovered at T
+            if(t < t_vec(lake_index))
             {
-                // The strategy here is that we use (1-poe) for t>t_vec(lake_index), poe for t = t_vec(lake_index) 
-                // and (1-pdet) from t=t_vec(lake_index) to t<lakes(lake_index).discovered, pdet for 
-                // t<lakes(lake_index).discovered.
-                // might want to sample pdet in log space.
-
-               if(t < t_vec(lake_index))
-               {
-                    //cout << lake_index << "\n";
-                    //update_pp_l_hood(lake_index,t);
-                    tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); //Prob uninv that year
-               }
-               if(t == t_vec(lake_index))
-               {
-                    tmp_lh += log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) )); //Prob inv IN that year
-//cout << lakes(lake_index).pp(t) << "\t" << log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) )) << "\t"<< tmp_lh << "\t"<< alpha <<"\n";
-                    tmp_lh += log(1 - pdet); //Prob of not detecting
-               }
-               if(t > t_vec(lake_index))
-                    tmp_lh += log(1 - pdet); //Prob of not detecting
-
+               //cout << lake_index << "\n";
+               //update_pp_l_hood(lake_index,t);
+               //Prob uninv that year
+               tmp_lh += - pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par); 
             }
-                lh += tmp_lh; //+ log(pdet); //Prob of detecting in the year of detection.
-        //}
-          }
+            if(t == t_vec(lake_index))
+            {
+                  //Prob inv IN that year
+                  tmp_lh += log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) ));
+                  if(lakes(lake_index).discovered != t)
+                      tmp_lh += log(1 - pdet); //Prob of not detecting
+            }
+            if(t > t_vec(lake_index))
+                 tmp_lh += log(1 - pdet); //Prob of not detecting
+            if(t == lakes(lake_index).discovered)
+                 tmp_lh += log(pdet); //Prob of detecting
+
+         }
+         lh += tmp_lh; //+ log(pdet); //Prob of detecting in the year of detection.  
+       }
+          
     }
-
     return lh;
 }
 
@@ -993,7 +990,7 @@ void likelihood_wrapperMCMC_MD(_vbc_vec<float> * pars, float * l,int dim)
    link_pars(parnames,(*pars));
 
    calc_traf();
-
+   calc_Uj();
    //calc_traf_mat();
    //calc_pp();
 
