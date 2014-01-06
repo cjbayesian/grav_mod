@@ -14,7 +14,7 @@
 //////////////////////////////////////////////////////////
 
 #include"grav.h"
-
+#include"sim_grav.h"
 
 // Read in sim inits //
 int main(int argc,char *argv[])
