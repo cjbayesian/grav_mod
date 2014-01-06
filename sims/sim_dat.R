@@ -2,7 +2,7 @@
 rm(list=ls())
 n_sources<-10
 n_lakes<-1000
-pres_only<-FALSE
+pres_only<-TRUE
 alpha<-runif(1,0,0.25)
 error_sd<-0.75
 
@@ -33,7 +33,7 @@ error_sd<-0.75
 
     ch_params<-runif(13+1,-0.4,0.4)
     #ch_params[1]<- runif(1,-4,-1) #Intercept -> alpha btw 0.01814993 and 0.3132617
-    ch_params[1]<- -1
+    ch_params[1]<- -0.2
 
     ch_params[2:14]<-0 ## to test on intercept only (equiv to testing common alpha)
     #ch_params[2]<- 1

@@ -213,8 +213,6 @@ void inits()
    init_file >> tmp;
    init_file >> gridded;
    init_file >> tmp;
-   init_file >> n_sources;
-   init_file >> tmp;
    init_file >> boot;
    init_file >> tmp;
    init_file >> fixed_d;

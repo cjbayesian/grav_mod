@@ -18,8 +18,8 @@ for(l in look_lakes)
     }
 }
 
-#plot(inv_year[found_year!=0],found_year[found_year!=0])
-#abline(0,1)
+plot(inv_year[found_year!=0],found_year[found_year!=0])
+abline(0,1)
 
 
 
