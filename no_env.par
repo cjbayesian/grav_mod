@@ -2,4 +2,4 @@ alpha 0.001
 d 1.5
 e 1
 c 1.5
-gamma 0.00001
+pdet 0.5

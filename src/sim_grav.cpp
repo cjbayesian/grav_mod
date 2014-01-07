@@ -41,51 +41,46 @@ int main(int argc,char *argv[])
    //for faster sims:
    n_lakes = 500;
    n_sources = 100;
-   for(int i=1;i<=n_lakes;i++)
-   {
-      //clear all but the seed lake(s)
-      if(lakes(i).discovered != from_year)
-      {
-         lakes(i).discovered = 0;
-         lakes(i).invaded = 0;
-         lakes(i).discovered = 0;
-         lakes(i).last_abs = 0;
-         lakes(i).status_2010 = 0;
-      }
-   }
-   init_state();
-   init_t(); 
-   calc_state();
    clear_traf_mat();
 
 
-   generate_params();
-   gamma_par = 0;
-   
+   n_sampled = 0;
+   // Drop situations where very few lakes are observed (< %10)
+   //while(n_sampled < 30)
+   //{
+      for(int i=1;i<=n_lakes;i++)
+      {
+         //clear all but the seed lake(s)
+         if(lakes(i).discovered != from_year)
+         {
+            lakes(i).discovered = 0;
+            lakes(i).invaded = 0;
+            lakes(i).last_abs = 0;
+            lakes(i).status_2010 = 0;
+         }
+      }
 
-   // Simulate the invasion //
-   calc_traf();
-   calc_Uj();
-
-   for(int i=1;i<=2;i++) 
-   {
+      init_state();
+      init_t(); 
+      calc_state();
+      generate_params();
+      gamma_par = 0;
+      // Simulate the invasion //
       calc_traf();
       calc_Uj();
-      sim_spread();
-      cout << "\n";
-   }
-   
-
-   // Simulate the detection process //
-   detect();
-   which_sampled_or_valid();
+      sim_spread(); cout << "\n";   
+      // Simulate the detection process //
+      detect();
+      which_sampled_or_valid();
+   //}
 
    // Fit the presence only model //
    pdet = 0;
-   for(int i=1;i<=20;i++)
+   //glb_alpha = glb_alpha*10;
+   for(int i=1;i<=39;i++)
    {
-      pdet = pdet + 0.05;
-      for(int ss=1;ss<=30;ss++)
+      pdet = pdet + 0.025; 
+      for(int ss=1;ss<=5;ss++)
       {
          sim_spread();
          cout << pdet << "\t" << l_hood_detp() << "\n";

@@ -36,7 +36,6 @@ void sim_inits()
    init_file >> pdet_min;
    init_file >> pdet_max;
 
-   cout << glb_alpha_min << "\t" << glb_alpha_max << "\n";
    init_file.close();
 }
 

@@ -405,6 +405,7 @@ void which_sampled_or_valid()
    _vbc_vec<int> tmp_val_inv_lakes_index(1,n_lakes); 
    int n_validation = 0;
    int n_invaded_in_validation_set = 0;
+   n_sampled = 0;
    for(int i=1;i<=n_lakes;i++)
    {
       // Count validation lakes //
@@ -717,11 +718,11 @@ void sim_spread()
             unifs(i,t) = runif(0,1);
             if( unifs(i,t) < min_unifs ) min_unifs = unifs(i,t);
         }
-        if( 1-exp(- pow(alpha(i) * lakes(i).Uj + gamma_par, c_par ) ) > min_unifs || lakes(i).discovered != 0 || lakes(i).last_abs != 0 )
+        if( 1-exp(- pow(alpha(i) * lakes(i).Uj + gamma_par, c_par ) ) >  \
+            min_unifs || lakes(i).discovered != 0 || lakes(i).last_abs != 0 )
         {
             //cout << lakes(i).last_abs << "++++\n";
             test_lakes(i) = 1;
-            //cout << i << "\t" << 1-exp(- pow(alpha(i) * lakes(i).Uj + gamma_par, c_par ) )<<"\t"<< lakes(i).Uj << "\n";
         }
     }
     calc_traf_mat_part(test_lakes);
@@ -739,8 +740,9 @@ void sim_spread()
             {
                 //cout << "*********" << lakes(lake_index).pp(t) << "\n";
                 //alpha(lake_index)=calc_alpha(lake_index);
-                if(  ( 1-exp(- pow(alpha(lake_index) *lakes(lake_index).pp(t) + gamma_par, c_par ) )  >= unifs(lake_index,t) 
-                         || lakes(lake_index).discovered==t ) 
+                if(  ( 1-exp(- pow(alpha(lake_index) *lakes(lake_index).pp(t) + \
+                         gamma_par, c_par ) )  >= unifs(lake_index,t) \
+                         || lakes(lake_index).discovered==t ) \
                          && lakes(lake_index).last_abs <= t ) // invade stochastically and restrict to observed pattern
                 {
                     state(t).n_inv++;
@@ -775,10 +777,12 @@ void update_sim_pp(int t)
     for(int i=1;i<=state(t).n_u_inv;i++)
     {
         to_lake_index=state(t).u_inv(i);
+        lakes(to_lake_index).pp(t+1) = 0;
         for(int j=1;j<=state(t).n_new_inv;j++)
         {
             from_lake_index=state(t).new_inv(j);
-            lakes(to_lake_index).pp(t+1)=lakes(to_lake_index).pp(t)+traf_mat(from_lake_index,to_lake_index);
+            lakes(to_lake_index).pp(t+1) += lakes(to_lake_index).pp(t) + \
+               traf_mat(from_lake_index,to_lake_index);
         }
     }
 }
@@ -885,10 +889,8 @@ float l_hood_detp()
             {
                   //Prob inv IN that year
                   tmp_lh += log(1 - exp( -pow(alpha*lakes(lake_index).pp(t)+gamma_par,c_par) ));
-                  if(lakes(lake_index).discovered != t)
-                      tmp_lh += log(1 - pdet); //Prob of not detecting
             }
-            if(t > t_vec(lake_index))
+            if(t >= t_vec(lake_index) && t != lakes(lake_index).discovered)
                  tmp_lh += log(1 - pdet); //Prob of not detecting
             if(t == lakes(lake_index).discovered)
                  tmp_lh += log(pdet); //Prob of detecting
